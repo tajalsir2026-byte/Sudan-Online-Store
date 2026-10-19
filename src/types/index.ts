@@ -20,6 +20,7 @@ export interface TenantSettings {
   showVatBreakdown?: boolean;
   showTaxPerItem?: boolean;
   loyaltyRateSdgPerPoint?: number; // e.g. 1000 SDG = 1 point
+  socialLinks?: { whatsapp?: string; facebook?: string; instagram?: string; youtube?: string; tiktok?: string };
 }
 
 export interface Tenant {

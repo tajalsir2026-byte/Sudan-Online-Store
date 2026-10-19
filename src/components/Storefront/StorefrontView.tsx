@@ -33,8 +33,10 @@ export const StorefrontView: React.FC<StorefrontViewProps> = ({
   products,
   onRefresh,
 }) => {
-  const [viewMode, setViewMode] = useState<'customer_view' | 'merchant_orders'>('customer_view');
+  const [viewMode, setViewMode] = useState<'customer_view' | 'merchant_orders' | 'social_settings'>('customer_view');
   const [orders, setOrders] = useState<StorefrontOrder[]>([]);
+  const [socialLinks, setSocialLinks] = useState({ whatsapp: '', facebook: '', instagram: '', youtube: '', tiktok: '' });
+  const [savingSocialLinks, setSavingSocialLinks] = useState(false);
 
   // Customer Shopping State
   const [selectedCategory, setSelectedCategory] = useState('الكل');
@@ -65,6 +67,10 @@ export const StorefrontView: React.FC<StorefrontViewProps> = ({
   useEffect(() => {
     loadOrders();
   }, [viewMode]);
+
+  useEffect(() => {
+    setSocialLinks({ whatsapp: tenant?.settings?.socialLinks?.whatsapp || '', facebook: tenant?.settings?.socialLinks?.facebook || '', instagram: tenant?.settings?.socialLinks?.instagram || '', youtube: tenant?.settings?.socialLinks?.youtube || '', tiktok: tenant?.settings?.socialLinks?.tiktok || '' });
+  }, [tenant?.id, tenant?.settings?.socialLinks]);
 
   const categories = ['الكل', ...Array.from(new Set(products.map((p) => p.category)))];
 
@@ -174,6 +180,12 @@ export const StorefrontView: React.FC<StorefrontViewProps> = ({
             }`}
           >
             لوحة تجهيز وإدارة الطلبات ({orders.length})
+          </button>
+          <button
+            onClick={() => setViewMode('social_settings')}
+            className={`px-3 py-1.5 rounded-md transition-colors ${viewMode === 'social_settings' ? 'bg-white text-emerald-700 shadow-sm' : 'text-slate-600'}`}
+          >
+            روابط المتجر
           </button>
         </div>
       </div>
@@ -348,6 +360,22 @@ export const StorefrontView: React.FC<StorefrontViewProps> = ({
             )}
           </div>
         </div>
+      ) : viewMode === 'social_settings' ? (
+        <form className="max-w-3xl mx-auto bg-white rounded-2xl p-6 border border-slate-200 shadow-sm space-y-5" onSubmit={async (event) => {
+          event.preventDefault(); if (!tenant) return; setSavingSocialLinks(true);
+          try { await api.updateCurrentTenant({ settings: { ...tenant.settings, socialLinks } }); onRefresh(); alert('تم حفظ روابط التواصل للمتجر'); }
+          catch (error: any) { alert(error.message || 'تعذر حفظ الروابط'); } finally { setSavingSocialLinks(false); }
+        }}>
+          <div><h3 className="text-lg font-black text-slate-900">روابط التواصل لمتجرك</h3><p className="text-sm text-slate-500 mt-1">أضف روابط حساباتك، والروابط الفارغة ما حتظهر للزبائن في تذييل المتجر.</p></div>
+          <div className="grid sm:grid-cols-2 gap-4">
+            {[['whatsapp','واتساب'],['facebook','فيسبوك'],['instagram','إنستغرام'],['youtube','يوتيوب'],['tiktok','تيك توك']].map(([key,label]) => (
+              <label key={key} className="text-sm font-bold text-slate-700">{label}
+                <input type="url" dir="ltr" placeholder={key === 'whatsapp' ? 'https://wa.me/249...' : `https://${key}.com/your-store`} value={socialLinks[key as keyof typeof socialLinks]} onChange={(event) => setSocialLinks((prev) => ({ ...prev, [key]: event.target.value }))} className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm font-normal" />
+              </label>
+            ))}
+          </div>
+          <button disabled={savingSocialLinks} className="rounded-lg bg-emerald-700 px-5 py-2.5 text-sm font-bold text-white disabled:opacity-50">{savingSocialLinks ? 'جاري الحفظ...' : 'حفظ روابط المتجر'}</button>
+        </form>
       ) : (
         /* MERCHANT ORDERS MANAGEMENT VIEW */
         <div className="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm">

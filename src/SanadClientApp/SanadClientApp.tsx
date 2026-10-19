@@ -433,6 +433,19 @@ export const SanadClientApp: React.FC<SanadClientAppProps> = ({ onSwitchToAdmin 
 
   const wishlistProductIds = wishlist.map((w) => w.productId);
 
+  const configuredSocialLinks = tenant?.settings?.socialLinks;
+  const safeSocialHref = (value?: string): string | undefined => {
+    try { const url = new URL(value || ''); return ['https:', 'http:'].includes(url.protocol) ? url.href : undefined; }
+    catch { return undefined; }
+  };
+  const socialLinkItems: { label: string; mark: string; href?: string; color: string }[] = [
+    { label: 'واتساب', mark: 'WA', href: safeSocialHref(configuredSocialLinks?.whatsapp), color: 'hover:bg-green-600' },
+    { label: 'فيسبوك', mark: 'f', href: safeSocialHref(configuredSocialLinks?.facebook), color: 'hover:bg-blue-600' },
+    { label: 'إنستغرام', mark: '◎', href: safeSocialHref(configuredSocialLinks?.instagram), color: 'hover:bg-pink-600' },
+    { label: 'يوتيوب', mark: '▶', href: safeSocialHref(configuredSocialLinks?.youtube), color: 'hover:bg-red-600' },
+    { label: 'تيك توك', mark: '♪', href: safeSocialHref(configuredSocialLinks?.tiktok), color: 'hover:bg-slate-700' },
+  ].filter((link) => Boolean(link.href));
+
   return (
     <div className="min-h-screen bg-slate-100/70 text-slate-900 flex flex-col font-sans" dir="rtl">
       {/* Client Header */}
@@ -689,6 +702,17 @@ export const SanadClientApp: React.FC<SanadClientAppProps> = ({ onSwitchToAdmin 
               </button>
             </div>
           </div>
+
+          {socialLinkItems.length > 0 && (
+            <nav aria-label="حسابات المتجر" className="flex flex-wrap justify-center gap-3 border-b border-slate-800 pb-6">
+              {socialLinkItems.map(({ label, mark, href, color }) => (
+                <a key={label} href={href} target="_blank" rel="noopener noreferrer" aria-label={label} title={label}
+                  className={`grid h-10 w-10 place-items-center rounded-full bg-slate-800 text-white transition-colors ${color}`}>
+                  <span aria-hidden="true" className="font-black">{mark}</span>
+                </a>
+              ))}
+            </nav>
+          )}
 
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-400 text-center sm:text-right">
             <div>

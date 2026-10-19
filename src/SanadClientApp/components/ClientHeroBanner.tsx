@@ -24,7 +24,7 @@ export const ClientHeroBanner: React.FC<ClientHeroBannerProps> = ({
   onExplorePreOrders,
   onTrackOrder,
 }) => {
-  const heroImage = '/src/assets/images/sanad_pos_hero_1792173270140.jpg';
+  const heroImage = '/src/assets/images/sanad-brand-banner.png';
 
   return (
     <div className="relative rounded-3xl overflow-hidden bg-slate-950 text-white shadow-xl border border-slate-800 my-4">
@@ -33,10 +33,10 @@ export const ClientHeroBanner: React.FC<ClientHeroBannerProps> = ({
         <img
           src={heroImage}
           alt="سند للتسوق الإلكتروني"
-          className="w-full h-full object-cover object-center opacity-35"
+          className="w-full h-full object-cover object-center opacity-60"
         />
-        <div className="absolute inset-0 bg-gradient-to-r from-slate-950 via-slate-950/80 to-transparent" />
-        <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-transparent to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-r from-slate-950/50 via-slate-950/20 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-t from-slate-950/50 via-transparent to-transparent" />
       </div>
 
       <div className="relative z-10 px-6 sm:px-10 py-10 sm:py-14 max-w-4xl space-y-5">

@@ -45,7 +45,7 @@ export const AdminWelcomeBanner: React.FC<AdminWelcomeBannerProps> = ({
     localStorage.setItem('sanad_admin_banner_minimized', String(next));
   };
 
-  const bannerImg = '/src/assets/images/sanad_pos_hero_1792173270140.jpg';
+  const bannerImg = '/src/assets/images/sanad-brand-banner.png';
 
   if (isMinimized) {
     return (
@@ -84,10 +84,10 @@ export const AdminWelcomeBanner: React.FC<AdminWelcomeBannerProps> = ({
         <img
           src={bannerImg}
           alt="سند لنقاط البيع السحابية"
-          className="w-full h-full object-cover object-center opacity-30 transform group-hover:scale-102 transition-transform duration-700"
+          className="w-full h-full object-cover object-center opacity-60 transform group-hover:scale-102 transition-transform duration-700"
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/85 to-transparent" />
-        <div className="absolute inset-0 bg-gradient-to-r from-slate-950 via-slate-950/90 to-emerald-950/60" />
+        <div className="absolute inset-0 bg-gradient-to-t from-slate-950/55 via-slate-950/25 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-r from-slate-950/55 via-slate-950/25 to-emerald-950/20" />
       </div>
 
       {/* Decorative ambient lights */}
