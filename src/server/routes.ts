@@ -2647,3 +2647,366 @@ apiRouter.post("/assistant/chat", async (req: Request, res: Response) => {
     return res.json({ reply: null, error: String(error) });
   }
 });
+
+/* =========================================================================
+   STOREFRONT ORDERS - Public Orders from Client App
+   ========================================================================= */
+
+// GET /storefront/orders - Get all storefront orders (for admin view)
+apiRouter.get('/storefront/orders', (req: Request, res: Response) => {
+  const orders = db.getSchema().storefrontOrders;
+  const sorted = [...orders].sort((a, b) =>
+    new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+  );
+  res.json({ orders: sorted });
+});
+
+// GET /storefront/orders/track/:orderNumber - Track order by number (public)
+apiRouter.get('/storefront/orders/track/:orderNumber', (req: Request, res: Response) => {
+  const order = db.getSchema().storefrontOrders.find(
+    (o) => o.orderNumber === req.params.orderNumber
+  );
+  if (!order) {
+    return res.status(404).json({ error: 'رقم الطلب غير موجود' });
+  }
+  res.json({ order });
+});
+
+// POST /storefront/orders - Create new order from client app
+apiRouter.post('/storefront/orders', (req: Request, res: Response) => {
+  const {
+    tenantId,
+    customerName,
+    customerPhone,
+    deliveryMethod,
+    pickupBranchId,
+    deliveryAddress,
+    items,
+    notes,
+  } = req.body;
+
+  if (!tenantId) {
+    return res.status(400).json({ error: 'يجب تحديد المنشأة' });
+  }
+  if (!customerName || !customerPhone) {
+    return res.status(400).json({ error: 'اسم العميل ورقم الهاتف مطلوبان' });
+  }
+  if (!items || !items.length) {
+    return res.status(400).json({ error: 'يجب إضافة منتج واحد على الأقل' });
+  }
+
+  const tenant = db.getTenant(tenantId);
+  if (!tenant) {
+    return res.status(404).json({ error: 'المنشأة غير موجودة' });
+  }
+
+  let totalSdg = 0;
+  for (const item of items) {
+    totalSdg += (item.unitPriceSdg || 0) * (item.quantity || 0);
+  }
+
+  const orderNumber = `ORD-${Date.now().toString().slice(-6)}`;
+
+  const newOrder = {
+    id: `order_${Date.now()}`,
+    tenantId,
+    orderNumber,
+    customerName,
+    customerPhone,
+    deliveryMethod: deliveryMethod || 'pickup',
+    pickupBranchId,
+    deliveryAddress,
+    items,
+    totalSdg,
+    status: 'new' as const,
+    paymentStatus: 'unpaid' as const,
+    notes,
+    createdAt: new Date().toISOString(),
+  };
+
+  db.getSchema().storefrontOrders.push(newOrder);
+  db.commit();
+
+  db.logAudit({
+    tenantId,
+    actorId: 'client_app',
+    actorName: customerName,
+    action: 'CREATE_STOREFRONT_ORDER',
+    entity: 'StorefrontOrder',
+    entityId: newOrder.id,
+    details: `طلب جديد من تطبيق الجمهور: ${orderNumber} - ${customerName}`,
+  });
+
+  res.status(201).json({
+    success: true,
+    order: newOrder,
+    message: `تم استلام طلبك بنجاح! رقم الطلب: ${orderNumber}`,
+  });
+});
+
+// PUT /storefront/orders/:id/status - Update order status (merchant/admin)
+apiRouter.put('/storefront/orders/:id/status', (req: Request, res: Response) => {
+  const { status, paymentStatus } = req.body;
+  const order = db.getSchema().storefrontOrders.find((o) => o.id === req.params.id);
+
+  if (!order) {
+    return res.status(404).json({ error: 'الطلب غير موجود' });
+  }
+
+  if (status) {
+    order.status = status;
+  }
+  if (paymentStatus) {
+    order.paymentStatus = paymentStatus;
+  }
+
+  db.commit();
+
+  res.json({ success: true, order });
+});
+
+/* =========================================================================
+   ALBANDAR ADS - Public Ads/Listings from Client App
+   ========================================================================= */
+
+// GET /storefront/ads - Get all albandar listings (for admin view)
+apiRouter.get('/storefront/ads', (req: Request, res: Response) => {
+  const listings = db.getSchema().albandarListings;
+  const sorted = [...listings].sort((a, b) =>
+    new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+  );
+  res.json({ ads: sorted });
+});
+
+// POST /storefront/ads - Create new listing/ad from client app
+apiRouter.post('/storefront/ads', (req: Request, res: Response) => {
+  const {
+    tenantId,
+    title,
+    description,
+    category,
+    priceSdg,
+    priceUsd,
+    city,
+    state,
+    condition,
+    imageUrl,
+    additionalImages,
+    sellerName,
+    sellerPhone,
+    sellerWhatsapp,
+    sellerType,
+    bankakAccount,
+    locationDetails,
+  } = req.body;
+
+  if (!title || !sellerName || !sellerPhone) {
+    return res.status(400).json({
+      error: 'العنوان واسم البائع ورقم الهاتف مطلوبة',
+    });
+  }
+
+  const newListing = {
+    id: `listing_${Date.now()}`,
+    title,
+    description: description || '',
+    category: category || 'electronics',
+    categoryNameAr:
+      category === 'cars'
+        ? 'سيارات'
+        : category === 'real_estate'
+        ? 'عقارات'
+        : category === 'electronics'
+        ? 'إلكترونيات'
+        : category === 'groceries'
+        ? 'مواد غذائية'
+        : category === 'livestock_crops'
+        ? 'محاصيل ومواشي'
+        : category === 'furniture_home'
+        ? 'أثاث منزلي'
+        : category === 'fashion'
+        ? 'أزياء'
+        : 'خدمات',
+    priceSdg: Number(priceSdg) || 0,
+    priceUsd: priceUsd ? Number(priceUsd) : undefined,
+    city: city || 'الخرطوم',
+    state: state || '',
+    condition: condition || 'مستعمل',
+    imageUrl: imageUrl || '',
+    additionalImages: additionalImages || [],
+    sellerName,
+    sellerType: sellerType || 'individual',
+    sellerPhone,
+    sellerWhatsapp: sellerWhatsapp || sellerPhone,
+    isVerifiedMerchant: false,
+    tenantId: tenantId || null,
+    branchId: null,
+    viewsCount: 0,
+    featured: false,
+    createdAt: new Date().toISOString(),
+    locationDetails,
+    bankakAccount,
+  };
+
+  db.getSchema().albandarListings.push(newListing);
+  db.commit();
+
+  db.logAudit({
+    tenantId: tenantId || 'public',
+    actorId: 'client_app',
+    actorName: sellerName,
+    action: 'CREATE_ALBANDAR_LISTING',
+    entity: 'AlbandarListing',
+    entityId: newListing.id,
+    details: `إعلان جديد من تطبيق الجمهور: ${title} - ${sellerName}`,
+  });
+
+  res.status(201).json({
+    success: true,
+    listing: newListing,
+    message: 'تم نشر إعلانك بنجاح! سيتم مراجعته من الإدارة قبل الظهور.',
+  });
+});
+
+// POST /storefront/ads/:id/approve - Approve a listing (admin)
+apiRouter.post('/storefront/ads/:id/approve', (req: Request, res: Response) => {
+  const listing = db.getSchema().albandarListings.find((l) => l.id === req.params.id);
+
+  if (!listing) {
+    return res.status(404).json({ error: 'الإعلان غير موجود' });
+  }
+
+  listing.featured = true;
+  listing.isVerifiedMerchant = true;
+
+  db.commit();
+
+  db.logAudit({
+    tenantId: 'admin',
+    actorId: 'super_admin',
+    actorName: 'مدير المنصة',
+    action: 'APPROVE_ALBANDAR_LISTING',
+    entity: 'AlbandarListing',
+    entityId: listing.id,
+    details: `تمت الموافقة على الإعلان: ${listing.title}`,
+  });
+
+  res.json({ success: true, listing });
+});
+
+// POST /storefront/ads/:id/reject - Reject a listing (admin)
+apiRouter.post('/storefront/ads/:id/reject', (req: Request, res: Response) => {
+  const idx = db.getSchema().albandarListings.findIndex((l) => l.id === req.params.id);
+
+  if (idx === -1) {
+    return res.status(404).json({ error: 'الإعلان غير موجود' });
+  }
+
+  const listing = db.getSchema().albandarListings[idx];
+  db.getSchema().albandarListings.splice(idx, 1);
+
+  db.commit();
+
+  db.logAudit({
+    tenantId: 'admin',
+    actorId: 'super_admin',
+    actorName: 'مدير المنصة',
+    action: 'REJECT_ALBANDAR_LISTING',
+    entity: 'AlbandarListing',
+    entityId: listing.id,
+    details: `تم رفض الإعلان: ${listing.title}`,
+  });
+
+  res.json({ success: true });
+});
+
+// GET /storefront/ads/public - Public approved listings (for client browsing)
+apiRouter.get('/storefront/ads/public', (req: Request, res: Response) => {
+  const category = req.query.category as string | undefined;
+  const city = req.query.city as string | undefined;
+
+  let listings = db.getSchema().albandarListings.filter((l) => l.featured);
+
+  if (category && category !== 'all') {
+    listings = listings.filter((l) => l.category === category);
+  }
+  if (city) {
+    listings = listings.filter((l) => l.city === city);
+  }
+
+  const sorted = listings.sort((a, b) =>
+    new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+  );
+
+  res.json({ ads: sorted });
+});
+
+/* =========================================================================
+   ADMIN APPLICATIONS - Merchant Signup Requests
+   ========================================================================= */
+
+// GET /admin/applications - Get merchant applications (admin only)
+apiRouter.get('/admin/applications', (req: Request, res: Response) => {
+  const tenants = db.getSchema().tenants;
+  const applications = tenants.map((t) => ({
+    id: `app_${t.id}`,
+    tenantId: t.id,
+    businessName: t.tradeName || t.name,
+    ownerName: t.name,
+    email: t.phone ? `${t.phone}@sanad.sd` : '',
+    phone: t.phone,
+    city: t.city,
+    status: t.status === 'trial' ? 'pending' : t.status === 'active' ? 'approved' : 'rejected',
+    appliedAt: t.createdAt,
+  }));
+
+  res.json({ applications });
+});
+
+// POST /admin/applications/:tenantId/approve - Approve merchant
+apiRouter.post('/admin/applications/:tenantId/approve', (req: Request, res: Response) => {
+  const tenant = db.getTenant(req.params.tenantId);
+
+  if (!tenant) {
+    return res.status(404).json({ error: 'المنشأة غير موجودة' });
+  }
+
+  tenant.status = 'active';
+  db.commit();
+
+  db.logAudit({
+    tenantId: 'admin',
+    actorId: 'super_admin',
+    actorName: 'مدير المنصة',
+    action: 'APPROVE_TENANT',
+    entity: 'Tenant',
+    entityId: tenant.id,
+    details: `تمت الموافقة على المنشأة: ${tenant.name}`,
+  });
+
+  res.json({ success: true, tenant });
+});
+
+// POST /admin/applications/:tenantId/reject - Reject merchant
+apiRouter.post('/admin/applications/:tenantId/reject', (req: Request, res: Response) => {
+  const tenant = db.getTenant(req.params.tenantId);
+
+  if (!tenant) {
+    return res.status(404).json({ error: 'المنشأة غير موجودة' });
+  }
+
+  tenant.status = 'suspended';
+  db.commit();
+
+  db.logAudit({
+    tenantId: 'admin',
+    actorId: 'super_admin',
+    actorName: 'مدير المنصة',
+    action: 'REJECT_TENANT',
+    entity: 'Tenant',
+    entityId: tenant.id,
+    details: `تم رفض المنشأة: ${tenant.name}`,
+  });
+
+  res.json({ success: true });
+});
