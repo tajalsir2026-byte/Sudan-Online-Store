@@ -27,7 +27,8 @@ import {
 } from 'lucide-react';
 import type { Sale, Branch, ReturnRecord } from '../../types/index.ts';
 import { api } from '../../lib/api.ts';
-import { generateZatcaTlvBase64, generateQrSvg } from '../../lib/zatcaQr.ts';
+import { generateZatcaTlvBase64 } from '../../lib/zatcaQr.ts';
+import { QrCodeDisplay } from '../Common/QrCodeDisplay.tsx';
 import { getThermalReceiptSettings } from '../../lib/printerSettings.ts';
 
 interface SalesViewProps {
@@ -1026,20 +1027,16 @@ export const SalesView: React.FC<SalesViewProps> = ({
 
               {/* QR Code */}
               <div className="text-center pt-1 flex flex-col items-center">
-                <div
+                <QrCodeDisplay
                   className="w-24 h-24 bg-white p-1 border border-slate-200 rounded"
-                  dangerouslySetInnerHTML={{
-                    __html: generateQrSvg(
-                      generateZatcaTlvBase64({
-                        sellerName: receiptSettings.storeName,
-                        taxNumber: receiptSettings.taxNumber,
-                        timestamp: viewingCreditNote.createdAt,
-                        totalWithVat: viewingCreditNote.totalRefundSdg.toString(),
-                        vatTotal: '0',
-                      }),
-                      88
-                    ),
-                  }}
+                  size={88}
+                  data={generateZatcaTlvBase64({
+                    sellerName: receiptSettings.storeName,
+                    taxNumber: receiptSettings.taxNumber,
+                    timestamp: viewingCreditNote.createdAt,
+                    totalWithVat: viewingCreditNote.totalRefundSdg.toString(),
+                    vatTotal: '0',
+                  })}
                 />
                 <span className="text-[9px] text-slate-400 mt-1 font-mono">
                   إشعار دائن ضريبي إلكتروني معتمد
@@ -1180,20 +1177,16 @@ export const SalesView: React.FC<SalesViewProps> = ({
 
               {/* QR Code */}
               <div className="text-center pt-2 flex flex-col items-center">
-                <div
+                <QrCodeDisplay
                   className="w-24 h-24 bg-white p-1 border border-slate-200 rounded"
-                  dangerouslySetInnerHTML={{
-                    __html: generateQrSvg(
-                      generateZatcaTlvBase64({
-                        sellerName: receiptSettings.storeName,
-                        taxNumber: receiptSettings.taxNumber,
-                        timestamp: viewingSale.createdAt,
-                        totalWithVat: viewingSale.grandTotalSdg.toString(),
-                        vatTotal: '0',
-                      }),
-                      96
-                    ),
-                  }}
+                  size={96}
+                  data={generateZatcaTlvBase64({
+                    sellerName: receiptSettings.storeName,
+                    taxNumber: receiptSettings.taxNumber,
+                    timestamp: viewingSale.createdAt,
+                    totalWithVat: viewingSale.grandTotalSdg.toString(),
+                    vatTotal: '0',
+                  })}
                 />
                 <span className="text-[9px] text-slate-400 mt-1 font-mono">رمز الفاتورة الإلكترونية</span>
               </div>

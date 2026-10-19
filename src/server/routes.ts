@@ -1,6 +1,7 @@
 import { GoogleGenAI } from "@google/genai";
 import { Router, Request, Response, NextFunction } from 'express';
 import { db } from './db.ts';
+import { generateAccessToken, generateRefreshToken } from './auth.ts';
 import type {
   Sale,
   SaleItem,
@@ -40,6 +41,150 @@ const requireTenant = (req: Request, res: Response, next: NextFunction) => {
   (req as AuthenticatedRequest).actorId = (req.headers['x-actor-id'] as string) || 'emp_owner_rowad';
   next();
 };
+
+/* =========================================================================
+   0. AUTHENTICATION - Login endpoint (no auth required)
+   ========================================================================= */
+apiRouter.post('/auth/login', (req: Request, res: Response) => {
+  const { email, pin, tenantId, role } = req.body;
+
+  // Validate tenant
+  const tid = tenantId || 'tenant_alrowad';
+  const tenant = db.getTenant(tid);
+  if (!tenant) {
+    return res.status(404).json({ error: 'المنشأة غير موجودة' });
+  }
+
+  // Find employee by email or PIN
+  const employees = db.getSchema().employees.filter((e) => e.tenantId === tid);
+  let employee = employees.find((e) => e.email === email) || employees.find((e) => e.pin === pin);
+
+  // Demo mode: if no match and role provided, use first matching role
+  if (!employee && role) {
+    employee = employees.find((e) => e.role === role);
+  }
+
+  if (!employee) {
+    return res.status(401).json({ error: 'بيانات الدخول غير صحيحة' });
+  }
+
+  if (!employee.isActive) {
+    return res.status(403).json({ error: 'هذا الحساب معطل. تواصل مع مدير النظام.' });
+  }
+
+  // Generate JWT tokens
+  const accessToken = generateAccessToken({
+    actorId: employee.id,
+    actorName: employee.name,
+    actorRole: employee.role,
+    tenantId: tid,
+    branchId: employee.branchId,
+  });
+
+  const refreshToken = generateRefreshToken({
+    actorId: employee.id,
+    tenantId: tid,
+  });
+
+  db.logAudit({
+    tenantId: tid,
+    actorId: employee.id,
+    actorName: employee.name,
+    action: 'LOGIN',
+    entity: 'Auth',
+    entityId: employee.id,
+    details: `تسجيل دخول: ${employee.name} (${employee.role})`,
+  });
+
+  res.json({
+    success: true,
+    accessToken,
+    refreshToken,
+    employee: {
+      id: employee.id,
+      name: employee.name,
+      email: employee.email,
+      role: employee.role,
+      branchId: employee.branchId,
+      permissions: employee.permissions,
+    },
+    tenant: {
+      id: tenant.id,
+      name: tenant.name,
+      tradeName: tenant.tradeName,
+      city: tenant.city,
+    },
+  });
+});
+
+// Refresh token endpoint
+apiRouter.post('/auth/refresh', (req: Request, res: Response) => {
+  const { refreshToken } = req.body;
+  if (!refreshToken) {
+    return res.status(400).json({ error: 'رمز التحديث مطلوب' });
+  }
+
+  try {
+    const { verifyToken } = require('./auth.ts');
+    const payload = verifyToken(refreshToken);
+    const employee = db.getSchema().employees.find((e) => e.id === payload.actorId);
+    if (!employee || !employee.isActive) {
+      return res.status(401).json({ error: 'المستخدم غير صالح' });
+    }
+
+    const newAccessToken = generateAccessToken({
+      actorId: employee.id,
+      actorName: employee.name,
+      actorRole: employee.role,
+      tenantId: payload.tenantId,
+      branchId: employee.branchId,
+    });
+
+    res.json({ success: true, accessToken: newAccessToken });
+  } catch {
+    return res.status(401).json({ error: 'رمز التحديث غير صالح أو منتهي' });
+  }
+});
+
+// Change PIN endpoint
+apiRouter.post('/auth/change-pin', requireTenant, (req: Request, res: Response) => {
+  const authReq = req as any;
+  const { currentPin, newPin } = req.body;
+
+  if (!newPin || newPin.length !== 4 || !/^\d{4}$/.test(newPin)) {
+    return res.status(400).json({ error: 'رمز PIN يجب أن يكون 4 أرقام' });
+  }
+
+  const employee = db.getSchema().employees.find((e) => e.id === authReq.actorId);
+  if (!employee) {
+    return res.status(404).json({ error: 'المستخدم غير موجود' });
+  }
+
+  // Verify current PIN if provided (skip for first-time setup with default PIN)
+  if (currentPin) {
+    const { verifyPin } = require('./pinHash.ts');
+    if (!verifyPin(currentPin, employee.pin)) {
+      return res.status(401).json({ error: 'رمز PIN الحالي غير صحيح' });
+    }
+  }
+
+  // Hash and store the new PIN
+  const { hashPin } = require('./pinHash.ts');
+  employee.pin = hashPin(newPin);
+  db.commit();
+
+  db.logAudit({
+    tenantId: authReq.tenantId,
+    actorId: authReq.actorId,
+    actorName: authReq.actorName,
+    action: 'CHANGE_PIN',
+    entity: 'Employee',
+    entityId: employee.id,
+    details: `تغيير رمز PIN الخاص بـ: ${employee.name}`,
+  });
+
+  res.json({ success: true, message: 'تم تغيير رمز PIN بنجاح' });
+});
 
 /* =========================================================================
    1. AUTH & TENANTS

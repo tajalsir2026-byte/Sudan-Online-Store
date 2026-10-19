@@ -40,10 +40,12 @@ import {
   Clock,
   RefreshCw,
   X,
+  Store,
 } from 'lucide-react';
 
 export default function App() {
   const [currentTab, setCurrentTab] = useState<string>('pos');
+  const [isLoading, setIsLoading] = useState<boolean>(true);
   // Two-App Architecture: 'admin' (Admin POS & Management) vs 'client' (Public SanadClientApp)
   const [appMode, setAppMode] = useState<'admin' | 'client'>(() => {
     if (typeof window !== 'undefined') {
@@ -138,6 +140,8 @@ export default function App() {
       setPendingOfflineCount(offlineCount);
     } catch (err) {
       console.warn('Initialization error:', err);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -253,6 +257,35 @@ export default function App() {
     api.setTenantId(tenantId);
     loadPrimaryData();
   };
+
+  // Loading screen on initial data fetch
+  if (isLoading) {
+    return (
+      <div dir="rtl" className="min-h-screen bg-gradient-to-b from-slate-50 to-slate-100 flex flex-col items-center justify-center font-sans">
+        {/* Logo / Brand */}
+        <div className="mb-8 text-center">
+          <div className="inline-flex items-center justify-center w-20 h-20 rounded-3xl bg-gradient-to-br from-emerald-500 to-emerald-700 shadow-lg shadow-emerald-200 mb-4">
+            <Store className="w-10 h-10 text-white" />
+          </div>
+          <h1 className="text-2xl font-black text-slate-900">منصة سـنـد</h1>
+          <p className="text-sm text-slate-500 mt-1">المنصة السحابية لنقاط البيع والتجارة</p>
+        </div>
+
+        {/* Skeleton Loader */}
+        <div className="w-full max-w-md px-6 space-y-3">
+          <div className="h-4 bg-slate-200 rounded-full animate-pulse w-3/4 mx-auto"></div>
+          <div className="h-4 bg-slate-200 rounded-full animate-pulse w-1/2 mx-auto"></div>
+          <div className="h-4 bg-slate-200 rounded-full animate-pulse w-2/3 mx-auto"></div>
+        </div>
+
+        {/* Spinner */}
+        <div className="mt-8 flex items-center gap-2 text-sm text-slate-500">
+          <RefreshCw className="w-4 h-4 animate-spin text-emerald-600" />
+          <span>جاري تحميل البيانات...</span>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-slate-100 flex flex-col font-sans select-none antialiased">

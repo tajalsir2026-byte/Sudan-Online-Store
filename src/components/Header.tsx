@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   Store,
   ShoppingCart,
@@ -23,6 +23,8 @@ import {
   CheckCircle,
   Sparkles,
   LayoutDashboard,
+  Menu,
+  X,
 } from 'lucide-react';
 import type { InventoryAlert } from '../types/index.ts';
 import { SanadLogo } from './Common/SanadLogo.tsx';
@@ -65,6 +67,17 @@ export const Header: React.FC<HeaderProps> = ({
   onRefreshAlerts,
 }) => {
   const [isAlertsOpen, setIsAlertsOpen] = React.useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  const navTabs = [
+    { id: 'pos', label: 'نقطة البيع (POS)' },
+    { id: 'inventory', label: 'المخزون والمنتجات' },
+    { id: 'transfers', label: 'تحويلات الفروع' },
+    { id: 'shifts', label: 'الورديات والخزينة' },
+    { id: 'reports', label: 'المحاسبة والتقارير' },
+    { id: 'admin', label: 'إدارة المنصة المركزية' },
+  ];
+
   const getRoleLabel = (role: string) => {
     switch (role) {
       case 'owner':
@@ -102,6 +115,15 @@ export const Header: React.FC<HeaderProps> = ({
         </div>
 
         {/* Zone 2: Primary navigation links */}
+        {/* Mobile hamburger menu button */}
+        <button
+          onClick={() => setIsMobileMenuOpen(true)}
+          className="xl:hidden flex items-center justify-center w-9 h-9 rounded-lg bg-slate-100 hover:bg-slate-200 transition-colors"
+          aria-label="فتح القائمة"
+        >
+          <Menu className="w-5 h-5 text-slate-700" />
+        </button>
+
         <nav className="hidden xl:flex items-center gap-6 text-sm font-medium text-slate-600">
           <button
             onClick={() => onTabChange('pos')}
@@ -511,6 +533,71 @@ export const Header: React.FC<HeaderProps> = ({
           <span>إدارة المنصة المركزية</span>
         </button>
       </div>
+
+      {/* Mobile Navigation Drawer */}
+      {isMobileMenuOpen && (
+        <div className="fixed inset-0 z-50 xl:hidden">
+          {/* Backdrop */}
+          <div
+            className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+            onClick={() => setIsMobileMenuOpen(false)}
+          />
+          {/* Drawer */}
+          <div className="absolute top-0 right-0 h-full w-72 bg-white shadow-2xl flex flex-col animate-in slide-in-from-right duration-200">
+            {/* Drawer Header */}
+            <div className="flex items-center justify-between p-4 border-b border-slate-200">
+              <div className="flex items-center gap-2">
+                <Store className="w-5 h-5 text-emerald-600" />
+                <span className="font-bold text-slate-900 text-sm">{tenantName}</span>
+              </div>
+              <button
+                onClick={() => setIsMobileMenuOpen(false)}
+                className="w-8 h-8 flex items-center justify-center rounded-lg bg-slate-100 hover:bg-slate-200 transition-colors"
+                aria-label="إغلاق القائمة"
+              >
+                <X className="w-4 h-4 text-slate-600" />
+              </button>
+            </div>
+
+            {/* Navigation Links */}
+            <nav className="flex-1 overflow-y-auto p-3 space-y-1">
+              {navTabs.map((tab) => (
+                <button
+                  key={tab.id}
+                  onClick={() => {
+                    onTabChange(tab.id);
+                    setIsMobileMenuOpen(false);
+                  }}
+                  className={`w-full text-right px-4 py-3 rounded-xl text-sm font-medium transition-colors ${
+                    currentTab === tab.id
+                      ? 'bg-emerald-50 text-emerald-800 border border-emerald-200'
+                      : 'text-slate-700 hover:bg-slate-100'
+                  }`}
+                >
+                  {tab.label}
+                </button>
+              ))}
+            </nav>
+
+            {/* Drawer Footer */}
+            <div className="p-3 border-t border-slate-200 space-y-2">
+              <button
+                onClick={() => {
+                  onTabChange('pos');
+                  setIsMobileMenuOpen(false);
+                }}
+                className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-semibold text-sm transition-colors"
+              >
+                <Store className="w-4 h-4" />
+                نقطة البيع
+              </button>
+              <div className="text-center text-[10px] text-slate-400">
+                {actor.name} · {getRoleLabel(actor.role)}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </header>
   );
 };

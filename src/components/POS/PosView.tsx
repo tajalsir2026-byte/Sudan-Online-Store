@@ -45,7 +45,8 @@ import type {
   PromotionRule,
 } from '../../types/index.ts';
 import { api } from '../../lib/api.ts';
-import { generateZatcaTlvBase64, generateQrSvg } from '../../lib/zatcaQr.ts';
+import { generateZatcaTlvBase64 } from '../../lib/zatcaQr.ts';
+import { QrCodeDisplay } from '../Common/QrCodeDisplay.tsx';
 import { CameraBarcodeScanner } from './CameraBarcodeScanner.tsx';
 import { PosPrinterModal } from './PosPrinterModal.tsx';
 import { PosCustomerModal } from './PosCustomerModal.tsx';
@@ -1710,20 +1711,16 @@ export const PosView: React.FC<PosViewProps> = ({
               {/* ZATCA / TLV Base64 QR Code */}
               {receiptSettings.showQrCode && (
                 <div className="flex flex-col items-center justify-center pt-2 pb-1">
-                  <div
+                  <QrCodeDisplay
                     className="w-24 h-24"
-                    dangerouslySetInnerHTML={{
-                      __html: generateQrSvg(
-                        generateZatcaTlvBase64({
-                          sellerName: receiptSettings.storeName || 'شركة الرواد للتجارة والمحاصيل',
-                          taxNumber: receiptSettings.taxNumber || '1004892348',
-                          timestamp: completedSale.createdAt,
-                          totalWithVat: completedSale.grandTotalSdg.toString(),
-                          vatTotal: '0',
-                        }),
-                        96
-                      ),
-                    }}
+                    size={96}
+                    data={generateZatcaTlvBase64({
+                      sellerName: receiptSettings.storeName || 'شركة الرواد للتجارة والمحاصيل',
+                      taxNumber: receiptSettings.taxNumber || '1004892348',
+                      timestamp: completedSale.createdAt,
+                      totalWithVat: completedSale.grandTotalSdg.toString(),
+                      vatTotal: '0',
+                    })}
                   />
                   <span className="text-[9px] text-slate-400 mt-1 font-mono">رمز الفاتورة الإلكترونية المعتمدة</span>
                 </div>

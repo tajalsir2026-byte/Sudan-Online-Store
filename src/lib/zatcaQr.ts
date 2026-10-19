@@ -5,7 +5,11 @@
  * Tag 3: Time stamp (ISO8601)
  * Tag 4: Invoice total amount (with VAT/inclusive)
  * Tag 5: VAT total
+ *
+ * Uses the real `qrcode` library for scannable QR codes.
  */
+
+import QRCode from 'qrcode';
 
 function toTLV(tag: number, value: string): Uint8Array {
   const encoder = new TextEncoder();
@@ -18,6 +22,9 @@ function toTLV(tag: number, value: string): Uint8Array {
   return tlv;
 }
 
+/**
+ * Generate the ZATCA-compliant TLV Base64 payload from receipt data.
+ */
 export function generateZatcaTlvBase64(params: {
   sellerName: string;
   taxNumber: string;
@@ -54,76 +61,50 @@ export function generateZatcaTlvBase64(params: {
 }
 
 /**
- * Generates an SVG representation of a QR-like matrix grid based on hash of input
- * ensuring crisp, zero-dependency rendering in thermal prints and UI preview.
+ * Generates a REAL, SCANNABLE SVG QR code using the `qrcode` library.
+ * The returned SVG can be embedded in receipts, printed on thermal printers,
+ * and scanned by any standard QR reader (including ZATCA compliance apps).
+ *
+ * @param data - The string/data to encode (usually a ZATCA TLV Base64 payload)
+ * @param size - The SVG width/height in pixels (default 120)
+ * @returns A promise resolving to a valid SVG string
  */
-export function generateQrSvg(data: string, size = 120): string {
-  // Simple deterministic 21x21 QR pattern generator from string hash
-  const gridSize = 21;
-  const matrix: boolean[][] = Array(gridSize)
-    .fill(false)
-    .map(() => Array(gridSize).fill(false));
-
-  // Finder patterns at three corners (7x7)
-  const setFinder = (startX: number, startY: number) => {
-    for (let r = 0; r < 7; r++) {
-      for (let c = 0; c < 7; c++) {
-        if (
-          r === 0 ||
-          r === 6 ||
-          c === 0 ||
-          c === 6 ||
-          (r >= 2 && r <= 4 && c >= 2 && c <= 4)
-        ) {
-          matrix[startY + r][startX + c] = true;
-        }
-      }
-    }
-  };
-
-  setFinder(0, 0); // Top-left
-  setFinder(14, 0); // Top-right
-  setFinder(0, 14); // Bottom-left
-
-  // Timing patterns
-  for (let i = 8; i < 13; i++) {
-    matrix[6][i] = i % 2 === 0;
-    matrix[i][6] = i % 2 === 0;
+export async function generateQrSvg(data: string, size = 120): Promise<string> {
+  try {
+    const svgString = await QRCode.toString(data, {
+      type: 'svg',
+      errorCorrectionLevel: 'M', // Medium — good balance for thermal prints
+      margin: 1,
+      width: size,
+      scale: undefined,
+    });
+    // Ensure the SVG has crispEdges for thermal printing clarity
+    return svgString.replace(
+      '<svg',
+      `<svg shape-rendering="crispEdges" width="${size}" height="${size}"`
+    );
+  } catch (err) {
+    console.error('[QR] Failed to generate real QR code:', err);
+    // Fallback: return a placeholder SVG indicating failure
+    return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${size} ${size}" width="${size}" height="${size}">
+      <rect width="${size}" height="${size}" fill="#fff"/>
+      <text x="${size / 2}" y="${size / 2}" text-anchor="middle" font-size="10" fill="#999">QR Error</text>
+    </svg>`;
   }
+}
 
-  // Populate data cells deterministically
-  let hash = 0;
-  for (let i = 0; i < data.length; i++) {
-    hash = (hash * 31 + data.charCodeAt(i)) >>> 0;
+/**
+ * Generates a real QR code as a Data URL (base64 PNG) — useful for canvas/printing.
+ */
+export async function generateQrDataUrl(data: string, size = 200): Promise<string> {
+  try {
+    return await QRCode.toDataURL(data, {
+      errorCorrectionLevel: 'M',
+      margin: 1,
+      width: size,
+    });
+  } catch (err) {
+    console.error('[QR] Failed to generate QR data URL:', err);
+    return '';
   }
-
-  for (let r = 0; r < gridSize; r++) {
-    for (let c = 0; c < gridSize; c++) {
-      // Don't overwrite finders
-      if (
-        (r < 8 && c < 8) ||
-        (r < 8 && c > 13) ||
-        (r > 13 && c < 8)
-      ) {
-        continue;
-      }
-      hash = ((hash ^ (r * 19 + c * 37)) * 1664525 + 1013904223) >>> 0;
-      matrix[r][c] = (hash % 100) < 52;
-    }
-  }
-
-  const cellSize = size / gridSize;
-  let paths = '';
-  for (let r = 0; r < gridSize; r++) {
-    for (let c = 0; c < gridSize; c++) {
-      if (matrix[r][c]) {
-        const x = (c * cellSize).toFixed(2);
-        const y = (r * cellSize).toFixed(2);
-        const w = cellSize.toFixed(2);
-        paths += `<rect x="${x}" y="${y}" width="${w}" height="${w}" fill="#000000" />`;
-      }
-    }
-  }
-
-  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${size} ${size}" width="${size}" height="${size}" shape-rendering="crispEdges"><rect width="${size}" height="${size}" fill="#ffffff"/>${paths}</svg>`;
 }

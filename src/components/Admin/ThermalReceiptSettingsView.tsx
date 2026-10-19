@@ -22,7 +22,8 @@ import {
   saveThermalReceiptSettings,
   DEFAULT_RECEIPT_SETTINGS,
 } from '../../lib/printerSettings.ts';
-import { generateZatcaTlvBase64, generateQrSvg } from '../../lib/zatcaQr.ts';
+import { generateZatcaTlvBase64 } from '../../lib/zatcaQr.ts';
+import { QrCodeDisplay } from '../Common/QrCodeDisplay.tsx';
 
 export const ThermalReceiptSettingsView: React.FC = () => {
   const [settings, setSettings] = useState<ThermalReceiptSettings>(getThermalReceiptSettings());
@@ -682,20 +683,16 @@ export const ThermalReceiptSettingsView: React.FC = () => {
               {/* QR Code */}
               {settings.showQrCode && (
                 <div className="flex flex-col items-center justify-center pt-2 pb-1">
-                  <div
+                  <QrCodeDisplay
                     className="w-20 h-20"
-                    dangerouslySetInnerHTML={{
-                      __html: generateQrSvg(
-                        generateZatcaTlvBase64({
-                          sellerName: settings.storeName || 'شركة الرواد',
-                          taxNumber: settings.taxNumber || '1004892348',
-                          timestamp: new Date().toISOString(),
-                          totalWithVat: sampleGrandTotal.toString(),
-                          vatTotal: sampleVatAmount.toString(),
-                        }),
-                        80
-                      ),
-                    }}
+                    size={80}
+                    data={generateZatcaTlvBase64({
+                      sellerName: settings.storeName || 'شركة الرواد',
+                      taxNumber: settings.taxNumber || '1004892348',
+                      timestamp: new Date().toISOString(),
+                      totalWithVat: sampleGrandTotal.toString(),
+                      vatTotal: sampleVatAmount.toString(),
+                    })}
                   />
                   <span className="text-[8px] text-slate-400 mt-1 font-mono">فاتورة إلكترونية معتمدة</span>
                 </div>

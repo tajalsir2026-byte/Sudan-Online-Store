@@ -208,7 +208,7 @@ const INITIAL_BRANCHES: Branch[] = [
   {
     id: 'branch_psd_main',
     tenantId: 'tenant_nile_boutique',
-    name: 'فرع بورتسودan الرئيسي',
+    name: 'فرع بورتسودان الرئيسي',
     code: 'PSD-01',
     city: 'بورتسودان',
     address: 'شارع السيد علي الميرغني، وسط البلد',
