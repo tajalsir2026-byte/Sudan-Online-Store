@@ -20,9 +20,11 @@ import {
   Clock,
   ArrowRight,
   Sparkles,
+  Smartphone,
 } from 'lucide-react';
 import type { Product, Branch, BranchInventory, StockMovement } from '../../types/index.ts';
 import { api } from '../../lib/api.ts';
+import { InventoryAuditModal } from './InventoryAuditModal.tsx';
 
 interface InventoryViewProps {
   products: Product[];
@@ -42,7 +44,8 @@ export const InventoryView: React.FC<InventoryViewProps> = ({
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('الكل');
   const [showLowStockOnly, setShowLowStockOnly] = useState(false);
-
+  // Smart Inventory Audit modal state
+  const [isAuditModalOpen, setIsAuditModalOpen] = useState(false);
   // Side alert panel for reorder threshold deficit products
   const [isAlertPanelOpen, setIsAlertPanelOpen] = useState(false);
 
@@ -388,6 +391,16 @@ export const InventoryView: React.FC<InventoryViewProps> = ({
           >
             <Plus className="w-4 h-4" />
             <span>إضافة صنف جديد</span>
+          </button>
+
+          {/* Smart Inventory Audit (Mobile Stocktaking) Button */}
+          <button
+            onClick={() => setIsAuditModalOpen(true)}
+            className="flex items-center gap-1.5 px-3.5 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold shadow-xs transition-all active:scale-95"
+            title="جرد المخزون السريع بالهاتف ومقارنة الأرصدة الفعلية مع النظام فورياً"
+          >
+            <Smartphone className="w-4 h-4 text-emerald-400" />
+            <span>تدقيق وجرد بالهاتف</span>
           </button>
         </div>
       </div>
@@ -1457,6 +1470,19 @@ export const InventoryView: React.FC<InventoryViewProps> = ({
           </form>
         </div>
       )}
+
+      {/* Smart Inventory Audit Modal */}
+      <InventoryAuditModal
+        isOpen={isAuditModalOpen}
+        onClose={() => setIsAuditModalOpen(false)}
+        branch={currentBranch}
+        branches={branches}
+        products={products}
+        onAuditCompleted={() => {
+          loadData();
+          onRefresh();
+        }}
+      />
     </div>
   );
 };

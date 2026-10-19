@@ -12,6 +12,10 @@ import { BranchesEmployeesView } from './components/BranchesEmployees/BranchesEm
 import { StorefrontView } from './components/Storefront/StorefrontView.tsx';
 import { SubscriptionView } from './components/Subscription/SubscriptionView.tsx';
 import { CentralAdminView } from './components/Admin/CentralAdminView.tsx';
+import { KitchenDisplayView } from './components/Kitchen/KitchenDisplayView.tsx';
+import { InventoryAuditModal } from './components/Inventory/InventoryAuditModal.tsx';
+import { SanadClientApp } from './SanadClientApp/SanadClientApp.tsx';
+import { AdminWelcomeBanner } from './components/Admin/AdminWelcomeBanner.tsx';
 
 import type {
   Tenant,
@@ -22,10 +26,13 @@ import type {
   CashierShift,
   Sale,
   CurrencyConfig,
+  InventoryAlert,
 } from './types/index.ts';
 import { api } from './lib/api.ts';
 import {
   Users,
+  Globe,
+  Sparkles,
   Building,
   RotateCcw,
   CheckCircle,
@@ -37,6 +44,29 @@ import {
 
 export default function App() {
   const [currentTab, setCurrentTab] = useState<string>('pos');
+  // Two-App Architecture: 'admin' (Admin POS & Management) vs 'client' (Public SanadClientApp)
+  const [appMode, setAppMode] = useState<'admin' | 'client'>(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get('app') === 'client' || window.location.hash === '#client') {
+        return 'client';
+      }
+      return (localStorage.getItem('sanad_app_mode') as 'admin' | 'client') || 'admin';
+    }
+    return 'admin';
+  });
+
+  const switchAppMode = (mode: 'admin' | 'client') => {
+    setAppMode(mode);
+    localStorage.setItem('sanad_app_mode', mode);
+    if (typeof window !== 'undefined') {
+      if (mode === 'client') {
+        window.history.replaceState(null, '', '?app=client');
+      } else {
+        window.history.replaceState(null, '', window.location.pathname);
+      }
+    }
+  };
 
   // Application Data States
   const [tenant, setTenant] = useState<Tenant | null>(null);
@@ -261,6 +291,7 @@ export default function App() {
         onSyncOffline={handleSyncOffline}
         isSyncing={isSyncing}
         onOpenStorefront={() => setCurrentTab('store_orders')}
+        onSwitchToClientApp={() => switchAppMode('client')}
       />
 
       {/* Quick Testing Context Bar (Tenant, Branch & Role Switcher for Review) */}
@@ -317,6 +348,16 @@ export default function App() {
           </div>
         </div>
 
+        {/* Client App Quick Switcher Button */}
+          <button
+            onClick={() => switchAppMode('client')}
+            className="px-2.5 py-1 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-bold rounded-lg text-[11px] flex items-center gap-1 transition-all shadow-xs"
+            title="فتح تطبيق المتسوقين والجمهور SanadClientApp"
+          >
+            <Globe className="w-3.5 h-3.5" />
+            <span>عرض تطبيق الجمهور (SanadClientApp)</span>
+          </button>
+
         {/* Offline indicator quick status */}
         <div className="flex items-center gap-3 font-mono text-[10px]">
           <span>العملة الافتراضية: SDG (جنيه سوداني)</span>
@@ -330,6 +371,52 @@ export default function App() {
 
       {/* Main Content Viewport */}
       <main className="flex-1 overflow-auto">
+        {/* Sanad POS Promotional Welcome Banner for Admin */}
+        {(currentTab === 'welcome' || currentTab === 'pos') && (
+          <div className="px-6 pt-5">
+            <AdminWelcomeBanner
+              tenantName={tenant?.tradeName || tenant?.name}
+              branchName={currentBranch?.name}
+              onNavigateTab={(t) => setCurrentTab(t)}
+              onSwitchToClientApp={() => switchAppMode('client')}
+              totalProductsCount={products.length}
+              activeShiftsCount={shifts.filter((s) => s.status === 'open').length || 1}
+              pendingOrdersCount={3}
+            />
+          </div>
+        )}
+
+        {currentTab === 'welcome' && (
+          <div className="px-6 pb-6 space-y-4">
+            <div className="bg-white rounded-3xl p-6 border border-slate-200 shadow-2xs space-y-4">
+              <h2 className="text-xl font-black text-slate-900">نظرة عامة على النظام وروابط سريعة</h2>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
+                <button
+                  onClick={() => setCurrentTab('pos')}
+                  className="p-4 rounded-2xl bg-slate-50 border border-slate-200 hover:border-emerald-500 text-right space-y-1 transition-all"
+                >
+                  <strong className="text-sm font-bold text-slate-900 block">نقطة البيع (POS)</strong>
+                  <p className="text-slate-500">إصدار الفواتير الفورية، الدفع ببنكك، العملات المشفرة، والباركود</p>
+                </button>
+                <button
+                  onClick={() => setCurrentTab('inventory_audit')}
+                  className="p-4 rounded-2xl bg-slate-50 border border-slate-200 hover:border-emerald-500 text-right space-y-1 transition-all"
+                >
+                  <strong className="text-sm font-bold text-slate-900 block">تدقيق المخزون بالهاتف</strong>
+                  <p className="text-slate-500">جرد سريع عبر الكاميرا ومطابقة الأرصدة الفعلية مع النظام فورياً</p>
+                </button>
+                <button
+                  onClick={() => switchAppMode('client')}
+                  className="p-4 rounded-2xl bg-amber-50 border border-amber-200 hover:border-amber-400 text-right space-y-1 transition-all"
+                >
+                  <strong className="text-sm font-bold text-slate-950 block">تطبيق الجمهور (SanadClientApp)</strong>
+                  <p className="text-amber-900">تصفح الكتالوج، الطلبات المسبقة، والسلة وتتبع الشحنات</p>
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
         {currentTab === 'pos' && (
           <PosView
             products={products}
@@ -338,8 +425,16 @@ export default function App() {
             currencies={currencies}
             onRefreshShift={loadPrimaryData}
             onOpenShiftModal={() => setCurrentTab('shifts')}
+            onOpenKitchen={() => setCurrentTab('kitchen')}
             isOffline={isOffline}
             onSaleCompleted={handleSaleCompleted}
+          />
+        )}
+
+        {currentTab === 'kitchen' && (
+          <KitchenDisplayView
+            branches={branches}
+            currentBranch={currentBranch}
           />
         )}
 
@@ -360,6 +455,25 @@ export default function App() {
             currentBranch={currentBranch}
             onRefresh={loadPrimaryData}
           />
+        )}
+
+        {currentTab === 'inventory_audit' && (
+          <div className="space-y-4">
+            <InventoryView
+              products={products}
+              branches={branches}
+              currentBranch={currentBranch}
+              onRefresh={loadPrimaryData}
+            />
+            <InventoryAuditModal
+              isOpen={true}
+              onClose={() => setCurrentTab('inventory')}
+              branch={currentBranch}
+              branches={branches}
+              products={products}
+              onAuditCompleted={loadPrimaryData}
+            />
+          </div>
         )}
 
         {currentTab === 'transfers' && (

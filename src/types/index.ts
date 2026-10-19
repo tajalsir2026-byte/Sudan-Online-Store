@@ -122,6 +122,10 @@ export interface Product {
   isActive: boolean;
   isTaxExempt?: boolean; // Whether product is exempt from VAT
   customTaxRate?: number; // Custom VAT % override (if undefined, uses tenant default)
+  currentStock?: number;
+  isPreOrderAllowed?: boolean;
+  allowPreOrder?: boolean;
+  costPriceSdg?: number;
   createdAt: string;
 }
 
@@ -133,6 +137,21 @@ export interface BranchInventory {
   quantity: number;
   minAlertQuantity: number;
   lastUpdated: string;
+}
+
+export interface InventoryAlert {
+  id: string;
+  tenantId: string;
+  branchId: string;
+  branchName: string;
+  productId: string;
+  productName: string;
+  sku: string;
+  currentQuantity: number;
+  reorderPoint: number;
+  severity: 'critical' | 'warning';
+  status: 'unread' | 'read' | 'dismissed';
+  createdAt: string;
 }
 
 export type StockMovementType =
@@ -399,7 +418,7 @@ export interface Expense {
   tenantId: string;
   branchId: string;
   branchName: string;
-  category: 'رواتب' | 'إيجار' | 'كهرباء ومياه' | 'نقل وتفريغ' | 'صيانة' | 'إعاشة وضيافة' | 'أخرى';
+  category: 'رواتب' | 'إيجار' | 'كهرباء ومياه' | 'نقل وتفريغ' | 'صيانة' | 'إعاشة وضيافة' | 'إنترنت واتصالات' | 'أخرى';
   amountSdg: number;
   description: string;
   paidBy: string;
@@ -502,3 +521,147 @@ export interface AlbandarShowroom {
   tenantSlug?: string;
 }
 
+// ==========================================
+// Kitchen Display System (KDS) Types
+// ==========================================
+export type KitchenStatus = 'pending' | 'preparing' | 'ready' | 'completed';
+
+export interface KitchenTicketItem {
+  id: string;
+  productId: string;
+  productName: string;
+  quantity: number;
+  unit: string;
+  notes?: string;
+  status: KitchenStatus;
+}
+
+export interface KitchenTicket {
+  id: string;
+  saleId: string;
+  invoiceNumber: string;
+  tenantId: string;
+  branchId: string;
+  branchName: string;
+  customerName?: string;
+  orderType: 'dine_in' | 'takeaway' | 'quick_order' | 'delivery';
+  items: KitchenTicketItem[];
+  status: KitchenStatus;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// ==========================================
+// Recurring Expenses (المصروفات الدورية)
+// ==========================================
+export type RecurringFrequency = 'weekly' | 'monthly' | 'yearly';
+
+export interface RecurringExpense {
+  id: string;
+  tenantId: string;
+  branchId: string;
+  branchName: string;
+  title: string;
+  category: 'رواتب' | 'إيجار' | 'كهرباء ومياه' | 'نقل وتفريغ' | 'صيانة' | 'إعاشة وضيافة' | 'إنترنت واتصالات' | 'أخرى';
+  amountSdg: number;
+  frequency: RecurringFrequency;
+  dayOfMonth?: number; // e.g. 1st or 25th of month
+  dayOfWeek?: number; // 0=Sunday, 6=Saturday
+  nextDueDate: string; // ISO date string YYYY-MM-DD
+  lastPostedDate?: string;
+  autoPost: boolean; // Automatically post to expenses on due date
+  isActive: boolean;
+  notes?: string;
+  createdAt: string;
+}
+
+// ==========================================
+// Promotional Offers System (العروض الترويجية)
+// ==========================================
+export type PromotionType = 'buy_x_get_y' | 'qty_discount_pct' | 'cart_fixed_discount';
+
+export interface PromotionRule {
+  id: string;
+  tenantId: string;
+  title: string;
+  description?: string;
+  type: PromotionType;
+  // Rule details
+  buyProductId?: string;
+  buyProductName?: string;
+  buyQuantity?: number;
+  freeProductId?: string;
+  freeProductName?: string;
+  freeQuantity?: number;
+  // Tier / Quantity discount rule
+  productId?: string;
+  productName?: string;
+  minQuantity?: number;
+  discountPct?: number;
+  // Cart total discount rule
+  minCartTotalSdg?: number;
+  discountAmountSdg?: number;
+  // Validity & Status
+  startDate?: string;
+  endDate?: string;
+  isActive: boolean;
+  createdAt: string;
+}
+
+// ==========================================
+// Smart Inventory Audit System (تدقيق وجرد المخزون الذكي بالهاتف)
+// ==========================================
+export type InventoryAuditStatus = 'in_progress' | 'completed' | 'cancelled';
+export type InventoryDiscrepancyStatus = 'matched' | 'deficit' | 'surplus' | 'uncounted';
+
+export interface InventoryAuditItem {
+  productId: string;
+  productName: string;
+  sku: string;
+  barcode: string;
+  category: string;
+  unit: string;
+  costPrice: number;
+  sellingPrice: number;
+  systemQuantity: number;      // الكمية المسجلة بالنظام
+  actualQuantity: number;      // الكمية الفعلية المحصية
+  difference: number;          // actualQuantity - systemQuantity (عجز بالسالب، زيادة بالموجب)
+  differenceCostValue: number; // difference * costPrice
+  status: InventoryDiscrepancyStatus;
+  notes?: string;              // تالف، منتهي، خطأ إدخال سابق، مفقود...
+  lastScannedAt?: string;
+}
+
+export interface InventoryAudit {
+  id: string;
+  tenantId: string;
+  branchId: string;
+  branchName: string;
+  auditNumber: string;         // e.g. AUD-20261019-001
+  title: string;               // e.g. "جرد دوري سريع بالهاتف"
+  status: InventoryAuditStatus;
+  startedAt: string;
+  completedAt?: string;
+  auditorId: string;
+  auditorName: string;
+  auditorRole: string;
+  deviceInfo?: string;         // e.g. "هاتف محمول ذكي"
+  scope: 'all' | 'category' | 'partial';
+  categoryFilter?: string;
+  items: InventoryAuditItem[];
+  totalProductsCount: number;
+  countedProductsCount: number;
+  matchedCount: number;
+  deficitCount: number;
+  surplusCount: number;
+  uncountedCount: number;
+  totalDeficitValueSdg: number;
+  totalSurplusValueSdg: number;
+  netDiscrepancyCostSdg: number;
+  reconciled: boolean;         // تم اعتماد وتسوية المخزون في النظام
+  reconciledAt?: string;
+  reconciledBy?: string;
+  notes?: string;
+  createdAt: string;
+  updatedAt: string;
+}

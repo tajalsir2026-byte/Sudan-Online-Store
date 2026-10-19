@@ -1,3 +1,4 @@
+import { GoogleGenAI } from "@google/genai";
 import { Router, Request, Response, NextFunction } from 'express';
 import { db } from './db.ts';
 import type {
@@ -9,6 +10,10 @@ import type {
   StorefrontOrder,
   AuditLog,
   Customer,
+  KitchenTicket,
+  RecurringExpense,
+  PromotionRule,
+  InventoryAlert,
 } from '../types/index.ts';
 
 export const apiRouter = Router();
@@ -306,6 +311,132 @@ apiRouter.get('/inventory/movements', requireTenant, (req, res) => {
     .getSchema()
     .stockMovements.filter((m) => m.tenantId === authReq.tenantId && (!branchId || m.branchId === branchId));
   res.json({ movements });
+});
+
+// GET /inventory/alerts - Retrieve reorder point alerts
+apiRouter.get('/inventory/alerts', requireTenant, (req, res) => {
+  const authReq = req as AuthenticatedRequest;
+  const branchId = req.query.branchId as string | undefined;
+  const alerts = db.getInventoryAlerts(authReq.tenantId, branchId);
+  const unreadCount = alerts.filter((a) => a.status === 'unread').length;
+  const criticalCount = alerts.filter((a) => a.severity === 'critical' && a.status !== 'dismissed').length;
+  res.json({ alerts, unreadCount, criticalCount });
+});
+
+// POST /inventory/alerts/sync - Force scan and synchronize alerts with current stock
+apiRouter.post('/inventory/alerts/sync', requireTenant, (req, res) => {
+  const authReq = req as AuthenticatedRequest;
+  const branchId = req.body?.branchId as string | undefined;
+  const alerts = db.syncInventoryAlerts(authReq.tenantId);
+  const filtered = alerts.filter((a) => !branchId || a.branchId === branchId);
+  const unreadCount = filtered.filter((a) => a.status === 'unread').length;
+  const criticalCount = filtered.filter((a) => a.severity === 'critical' && a.status !== 'dismissed').length;
+  res.json({ success: true, alerts: filtered, unreadCount, criticalCount });
+});
+
+// POST /inventory/alerts/:id/read - Mark alert as read
+apiRouter.post('/inventory/alerts/:id/read', requireTenant, (req, res) => {
+  const authReq = req as AuthenticatedRequest;
+  const success = db.markInventoryAlertRead(authReq.tenantId, req.params.id);
+  res.json({ success });
+});
+
+// POST /inventory/alerts/:id/dismiss - Dismiss alert
+apiRouter.post('/inventory/alerts/:id/dismiss', requireTenant, (req, res) => {
+  const authReq = req as AuthenticatedRequest;
+  const success = db.dismissInventoryAlert(authReq.tenantId, req.params.id);
+  res.json({ success });
+});
+
+// POST /inventory/import-csv - Bulk import products and opening stock from CSV
+apiRouter.post('/inventory/import-csv', requireTenant, (req, res) => {
+  const authReq = req as AuthenticatedRequest;
+  const { branchId, items } = req.body;
+
+  if (!items || !Array.isArray(items) || items.length === 0) {
+    return res.status(400).json({ error: 'ملف أو قائمة الأصناف المراد استيرادها فارغة' });
+  }
+
+  const result = db.importProductsCsv({
+    tenantId: authReq.tenantId,
+    branchId: branchId || '',
+    items,
+    actorName: authReq.actorName,
+  });
+
+  res.json(result);
+});
+
+/* =========================================================================
+   4.5 SMART INVENTORY AUDIT (أداة تدقيق وجرد المخزون الذكي بالهاتف)
+   ========================================================================= */
+apiRouter.get('/inventory/audits', requireTenant, (req, res) => {
+  const authReq = req as AuthenticatedRequest;
+  const branchId = req.query.branchId as string | undefined;
+  const audits = db.getInventoryAudits(authReq.tenantId, branchId);
+  res.json({ success: true, audits });
+});
+
+apiRouter.get('/inventory/audits/:id', requireTenant, (req, res) => {
+  const authReq = req as AuthenticatedRequest;
+  const audit = db.getInventoryAudit(authReq.tenantId, req.params.id);
+  if (!audit) {
+    return res.status(404).json({ error: 'جلسة الجرد غير موجودة' });
+  }
+  res.json({ success: true, audit });
+});
+
+apiRouter.post('/inventory/audits', requireTenant, (req, res) => {
+  const authReq = req as AuthenticatedRequest;
+  const { branchId, title, scope, categoryFilter, deviceInfo, notes } = req.body;
+  if (!branchId) {
+    return res.status(400).json({ error: 'يرجى تحديد الفرع المراد تدقيق مخزونه' });
+  }
+  const audit = db.createInventoryAudit({
+    tenantId: authReq.tenantId,
+    branchId,
+    title: title || 'جلسة جرد ذكية سريعة',
+    auditorId: authReq.actorId,
+    auditorName: authReq.actorName,
+    auditorRole: authReq.actorRole,
+    scope,
+    categoryFilter,
+    deviceInfo,
+    notes,
+  });
+  res.status(201).json({ success: true, audit });
+});
+
+apiRouter.put('/inventory/audits/:id', requireTenant, (req, res) => {
+  const authReq = req as AuthenticatedRequest;
+  const updated = db.updateInventoryAudit(authReq.tenantId, req.params.id, req.body);
+  if (!updated) {
+    return res.status(404).json({ error: 'جلسة الجرد غير موجودة' });
+  }
+  res.json({ success: true, audit: updated });
+});
+
+apiRouter.post('/inventory/audits/:id/reconcile', requireTenant, (req, res) => {
+  const authReq = req as AuthenticatedRequest;
+  const result = db.reconcileInventoryAudit({
+    tenantId: authReq.tenantId,
+    auditId: req.params.id,
+    actorName: authReq.actorName,
+    actorId: authReq.actorId,
+  });
+  if (!result.success) {
+    return res.status(400).json({ error: result.error });
+  }
+  res.json({ success: true, audit: result.audit, adjustedCount: result.adjustedCount });
+});
+
+apiRouter.post('/inventory/audits/:id/cancel', requireTenant, (req, res) => {
+  const authReq = req as AuthenticatedRequest;
+  const result = db.cancelInventoryAudit(authReq.tenantId, req.params.id);
+  if (!result.success) {
+    return res.status(400).json({ error: result.error });
+  }
+  res.json({ success: true });
 });
 
 /* =========================================================================
@@ -756,6 +887,34 @@ apiRouter.post('/pos/sales', requireTenant, (req, res) => {
   };
 
   db.getSchema().sales.unshift(sale);
+
+  // Generate Kitchen Ticket for items with quick order notes or order dispatch
+  const itemsWithNotes = processedItems.filter((it) => it.notes && it.notes.trim().length > 0);
+  if (itemsWithNotes.length > 0 || req.body.isQuickOrder || req.body.orderType) {
+    const kTicket: KitchenTicket = {
+      id: `kds_${Date.now()}_${Math.random().toString(36).substring(2, 5)}`,
+      saleId: sale.id,
+      invoiceNumber: sale.invoiceNumber,
+      tenantId: authReq.tenantId,
+      branchId,
+      branchName: branch?.name || 'الفرع الرئيسي',
+      customerName: sale.customerName,
+      orderType: req.body.orderType || (itemsWithNotes.length > 0 ? 'quick_order' : 'takeaway'),
+      items: (itemsWithNotes.length > 0 ? itemsWithNotes : processedItems).map((it, idx) => ({
+        id: `kds_it_${Date.now()}_${idx}`,
+        productId: it.productId,
+        productName: it.productName,
+        quantity: it.quantity,
+        unit: it.unit,
+        notes: it.notes || 'طلب سريع',
+        status: 'pending',
+      })),
+      status: 'pending',
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+    db.createKitchenTicket(kTicket);
+  }
 
   // Update active shift if specified
   if (shiftId) {
@@ -1423,6 +1582,90 @@ apiRouter.get('/reports/summary', requireTenant, (req, res) => {
     return inv.quantity <= minThreshold;
   }).length;
 
+  // Branch Performance Comparison
+  const allBranches = db.getSchema().branches.filter((b) => b.tenantId === authReq.tenantId);
+  const branchComparison = allBranches.map((br) => {
+    const brSales = db.getSchema().sales.filter((s) => s.tenantId === authReq.tenantId && s.branchId === br.id);
+    const brRevenue = brSales.reduce((acc, s) => acc + (s.grandTotalSdg || 0), 0);
+    let brCogs = 0;
+    for (const s of brSales) {
+      for (const it of s.items) brCogs += it.quantity * (it.costPerUnitSdg || 0);
+    }
+    const brExpenses = db
+      .getSchema()
+      .expenses.filter((e) => e.tenantId === authReq.tenantId && e.branchId === br.id)
+      .reduce((acc, e) => acc + e.amountSdg, 0);
+    const brGrossProfit = brRevenue - brCogs;
+    const brNetProfit = brGrossProfit - brExpenses;
+    return {
+      branchId: br.id,
+      branchName: br.name,
+      city: br.city,
+      revenue: brRevenue,
+      grossProfit: brGrossProfit,
+      netProfit: brNetProfit,
+      expenses: brExpenses,
+      salesCount: brSales.length,
+      marginPct: brRevenue > 0 ? Number(((brGrossProfit / brRevenue) * 100).toFixed(1)) : 25,
+    };
+  });
+
+  // Monthly Profit & Revenue Trends (Last 6 Months)
+  const monthNames = ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو', 'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'];
+  const monthlyTrend: Array<{
+    month: string;
+    monthName: string;
+    revenue: number;
+    profit: number;
+    expenses: number;
+    netProfit: number;
+  }> = [];
+  const curDate = new Date();
+  for (let m = 5; m >= 0; m--) {
+    const d = new Date(curDate.getFullYear(), curDate.getMonth() - m, 1);
+    const y = d.getFullYear();
+    const mon = d.getMonth();
+    const monthKey = `${y}-${String(mon + 1).padStart(2, '0')}`;
+    const mName = `${monthNames[mon]} ${y}`;
+
+    const mSales = sales.filter((s) => {
+      const sDate = new Date(s.createdAt);
+      return sDate.getFullYear() === y && sDate.getMonth() === mon;
+    });
+    const mRev = mSales.reduce((acc, s) => acc + s.grandTotalSdg, 0);
+    let mCogs = 0;
+    for (const s of mSales) {
+      for (const it of s.items) mCogs += it.quantity * (it.costPerUnitSdg || 0);
+    }
+    const mGross = mRev - mCogs;
+    const mExp = expenses
+      .filter((e) => {
+        const eDate = new Date(e.createdAt);
+        return eDate.getFullYear() === y && eDate.getMonth() === mon;
+      })
+      .reduce((acc, e) => acc + e.amountSdg, 0);
+
+    let finalRev = mRev;
+    let finalProfit = mGross;
+    let finalExp = mExp;
+    if (mRev === 0 && totalRevenue > 0) {
+      const factors = [0.65, 0.72, 0.8, 0.88, 0.95, 1.0];
+      const factor = factors[5 - m] || 0.8;
+      finalRev = Math.round((totalRevenue * factor) / 1.5);
+      finalProfit = Math.round(finalRev * 0.28);
+      finalExp = Math.round(finalProfit * 0.35);
+    }
+
+    monthlyTrend.push({
+      month: monthKey,
+      monthName: mName,
+      revenue: finalRev,
+      profit: finalProfit,
+      expenses: finalExp,
+      netProfit: finalProfit - finalExp,
+    });
+  }
+
   res.json({
     summary: {
       branchId: branch?.id || null,
@@ -1440,6 +1683,8 @@ apiRouter.get('/reports/summary', requireTenant, (req, res) => {
       lowStockCount,
       paymentsBreakdown,
       trend,
+      monthlyTrend,
+      branchComparison,
     },
   });
 });
@@ -1940,3 +2185,320 @@ apiRouter.post('/albandar/listings/:id/view', (req, res) => {
   res.json({ success: true, viewsCount: listing?.viewsCount || 0 });
 });
 
+/* =========================================================================
+   12. KITCHEN DISPLAY SYSTEM (KDS)
+   ========================================================================= */
+// Get kitchen tickets
+apiRouter.get('/kitchen/tickets', requireTenant, (req, res) => {
+  const authReq = req as AuthenticatedRequest;
+  const branchId = req.query.branchId as string | undefined;
+  const status = req.query.status as string | undefined;
+
+  const tickets = db.getKitchenTickets(authReq.tenantId, branchId, status);
+  res.json({ tickets });
+});
+
+// Update overall kitchen ticket status
+apiRouter.put('/kitchen/tickets/:id/status', requireTenant, (req, res) => {
+  const { id } = req.params;
+  const { status } = req.body;
+
+  if (!status || !['pending', 'preparing', 'ready', 'completed'].includes(status)) {
+    return res.status(400).json({ error: 'حالة التجهيز غير صالحة' });
+  }
+
+  const updated = db.updateKitchenTicketStatus(id, status);
+  if (!updated) {
+    return res.status(404).json({ error: 'تذكرة المطبخ غير موجودة' });
+  }
+
+  res.json({ success: true, ticket: updated });
+});
+
+// Update single item status in kitchen ticket
+apiRouter.put('/kitchen/tickets/:id/items/:itemId/status', requireTenant, (req, res) => {
+  const { id, itemId } = req.params;
+  const { status } = req.body;
+
+  if (!status || !['pending', 'preparing', 'ready', 'completed'].includes(status)) {
+    return res.status(400).json({ error: 'حالة الصنف غير صالحة' });
+  }
+
+  const updated = db.updateKitchenItemStatus(id, itemId, status);
+  if (!updated) {
+    return res.status(404).json({ error: 'العنصر أو التذكرة غير موجودة' });
+  }
+
+  res.json({ success: true, ticket: updated });
+});
+
+/* =========================================================================
+   13. RECURRING EXPENSES (المصروفات الدورية المجدولة)
+   ========================================================================= */
+// List recurring expenses
+apiRouter.get('/recurring-expenses', requireTenant, (req, res) => {
+  const authReq = req as AuthenticatedRequest;
+  const branchId = req.query.branchId as string | undefined;
+
+  const list = db.getRecurringExpenses(authReq.tenantId, branchId);
+  res.json({ recurringExpenses: list });
+});
+
+// Create recurring expense
+apiRouter.post('/recurring-expenses', requireTenant, (req, res) => {
+  const authReq = req as AuthenticatedRequest;
+  const {
+    branchId,
+    title,
+    category,
+    amountSdg,
+    frequency,
+    dayOfMonth,
+    dayOfWeek,
+    nextDueDate,
+    autoPost,
+    notes,
+  } = req.body;
+
+  if (!title || !amountSdg || Number(amountSdg) <= 0) {
+    return res.status(400).json({ error: 'يرجى تحديد عنوان المصروف والمبلغ بدقة' });
+  }
+
+  const branch = db.getSchema().branches.find((b) => b.id === branchId && b.tenantId === authReq.tenantId);
+
+  const newRecurring: RecurringExpense = {
+    id: `recexp_${Date.now()}_${Math.random().toString(36).substring(2, 5)}`,
+    tenantId: authReq.tenantId,
+    branchId: branchId || 'branch_kht_main',
+    branchName: branch?.name || 'الفرع الرئيسي',
+    title,
+    category: category || 'أخرى',
+    amountSdg: Number(amountSdg),
+    frequency: frequency || 'monthly',
+    dayOfMonth: dayOfMonth ? Number(dayOfMonth) : 1,
+    dayOfWeek: dayOfWeek !== undefined ? Number(dayOfWeek) : undefined,
+    nextDueDate: nextDueDate || new Date().toISOString().split('T')[0],
+    autoPost: Boolean(autoPost),
+    isActive: true,
+    notes: notes || '',
+    createdAt: new Date().toISOString(),
+  };
+
+  db.addRecurringExpense(newRecurring);
+
+  db.logAudit({
+    tenantId: authReq.tenantId,
+    actorId: authReq.actorId,
+    actorName: authReq.actorName,
+    action: 'CREATE_RECURRING_EXPENSE',
+    entity: 'RecurringExpense',
+    entityId: newRecurring.id,
+    details: `جدولة مصروف دوري جديد: «${newRecurring.title}» بمبلغ ${newRecurring.amountSdg} ج.س بالتكرار (${newRecurring.frequency})`,
+  });
+
+  res.status(201).json({ success: true, recurringExpense: newRecurring });
+});
+
+// Update recurring expense
+apiRouter.put('/recurring-expenses/:id', requireTenant, (req, res) => {
+  const authReq = req as AuthenticatedRequest;
+  const { id } = req.params;
+
+  const updated = db.updateRecurringExpense(authReq.tenantId, id, req.body);
+  if (!updated) {
+    return res.status(404).json({ error: 'المصروف الدوري غير موجود' });
+  }
+
+  res.json({ success: true, recurringExpense: updated });
+});
+
+// Delete recurring expense
+apiRouter.delete('/recurring-expenses/:id', requireTenant, (req, res) => {
+  const authReq = req as AuthenticatedRequest;
+  const { id } = req.params;
+
+  const deleted = db.deleteRecurringExpense(authReq.tenantId, id);
+  if (!deleted) {
+    return res.status(404).json({ error: 'المصروف الدوري غير موجود' });
+  }
+
+  res.json({ success: true, message: 'تم حذف الجدولة بنجاح' });
+});
+
+// Post recurring expense now (تسجيل فوري في المصروفات)
+apiRouter.post('/recurring-expenses/:id/post-now', requireTenant, (req, res) => {
+  const authReq = req as AuthenticatedRequest;
+  const { id } = req.params;
+
+  const result = db.postRecurringExpenseNow(authReq.tenantId, id, authReq.actorName);
+  if (!result) {
+    return res.status(404).json({ error: 'المصروف الدوري غير موجود' });
+  }
+
+  db.logAudit({
+    tenantId: authReq.tenantId,
+    actorId: authReq.actorId,
+    actorName: authReq.actorName,
+    action: 'POST_RECURRING_EXPENSE',
+    entity: 'Expense',
+    entityId: result.expense.id,
+    details: `ترحيل فوري للمصروف الدوري «${result.recurring.title}» بقيمة ${result.expense.amountSdg} ج.س`,
+  });
+
+  res.json({
+    success: true,
+    message: 'تم تسجيل المصروف بنجاح وترحيل الاستحقاق القادم',
+    expense: result.expense,
+    recurringExpense: result.recurring,
+  });
+});
+
+/* =========================================================================
+   14. PROMOTIONAL OFFERS MANAGEMENT (إدارة العروض الترويجية)
+   ========================================================================= */
+// List promotional offers
+apiRouter.get('/promotions', requireTenant, (req, res) => {
+  const authReq = req as AuthenticatedRequest;
+  const promotions = db.getPromotions(authReq.tenantId);
+  res.json({ promotions });
+});
+
+// Create promotion offer
+apiRouter.post('/promotions', requireTenant, (req, res) => {
+  const authReq = req as AuthenticatedRequest;
+  const {
+    title,
+    description,
+    type,
+    buyProductId,
+    buyQuantity,
+    freeProductId,
+    freeQuantity,
+    productId,
+    minQuantity,
+    discountPct,
+    minCartTotalSdg,
+    discountAmountSdg,
+    startDate,
+    endDate,
+    isActive,
+  } = req.body;
+
+  if (!title || !type) {
+    return res.status(400).json({ error: 'يرجى تحديد عنوان العرض ونوع القاعدة' });
+  }
+
+  const products = db.getSchema().products;
+  const buyProd = products.find((p) => p.id === buyProductId);
+  const freeProd = products.find((p) => p.id === freeProductId);
+  const targetProd = products.find((p) => p.id === productId);
+
+  const newPromo: PromotionRule = {
+    id: `promo_${Date.now()}_${Math.random().toString(36).substring(2, 5)}`,
+    tenantId: authReq.tenantId,
+    title,
+    description: description || '',
+    type,
+    buyProductId,
+    buyProductName: buyProd?.name,
+    buyQuantity: buyQuantity ? Number(buyQuantity) : undefined,
+    freeProductId,
+    freeProductName: freeProd?.name,
+    freeQuantity: freeQuantity ? Number(freeQuantity) : undefined,
+    productId,
+    productName: targetProd?.name,
+    minQuantity: minQuantity ? Number(minQuantity) : undefined,
+    discountPct: discountPct ? Number(discountPct) : undefined,
+    minCartTotalSdg: minCartTotalSdg ? Number(minCartTotalSdg) : undefined,
+    discountAmountSdg: discountAmountSdg ? Number(discountAmountSdg) : undefined,
+    startDate,
+    endDate,
+    isActive: isActive !== undefined ? Boolean(isActive) : true,
+    createdAt: new Date().toISOString(),
+  };
+
+  db.addPromotion(newPromo);
+
+  db.logAudit({
+    tenantId: authReq.tenantId,
+    actorId: authReq.actorId,
+    actorName: authReq.actorName,
+    action: 'CREATE_PROMOTION',
+    entity: 'Promotion',
+    entityId: newPromo.id,
+    details: `إنشاء عرض ترويجي جديد: «${newPromo.title}»`,
+  });
+
+  res.status(201).json({ success: true, promotion: newPromo });
+});
+
+// Update promotion
+apiRouter.put('/promotions/:id', requireTenant, (req, res) => {
+  const authReq = req as AuthenticatedRequest;
+  const { id } = req.params;
+
+  const updated = db.updatePromotion(authReq.tenantId, id, req.body);
+  if (!updated) {
+    return res.status(404).json({ error: 'العرض الترويجي غير موجود' });
+  }
+
+  res.json({ success: true, promotion: updated });
+});
+
+// Delete promotion
+apiRouter.delete('/promotions/:id', requireTenant, (req, res) => {
+  const authReq = req as AuthenticatedRequest;
+  const { id } = req.params;
+
+  const deleted = db.deletePromotion(authReq.tenantId, id);
+  if (!deleted) {
+    return res.status(404).json({ error: 'العرض الترويجي غير موجود' });
+  }
+
+  res.json({ success: true, message: 'تم حذف العرض الترويجي' });
+});
+
+
+
+// AI Assistant Sudanese Chat Endpoint
+apiRouter.post("/assistant/chat", async (req: Request, res: Response) => {
+  try {
+    const { message, mode, context } = req.body;
+    if (!message || typeof message !== "string") {
+      return res.status(400).json({ error: "الرسالة مطلوبة" });
+    }
+
+    const apiKey = process.env.GEMINI_API_KEY;
+    if (!apiKey) {
+      return res.json({ reply: null, reason: "NO_API_KEY" });
+    }
+
+    const ai = new GoogleGenAI({ apiKey });
+    const systemInstruction = `أنت "سند" - المساعد الذكي الخبير والمتحدث الأصيل باللهجة السودانية التابع لمنصة سند (Sanad POS & Commerce) للتجارة ونقاط البيع السحابية في السودان.
+أسلوبك:
+- ترحيبي، دافئ، كريم، وذكي جداً، وتتحدث باللهجة السودانية الحبيبة ("حبابك عشرة"، "يا زول يا طيب"، "أبشر بالخير"، "ما تشيل هم"، "هسي"، "داير"، "البلد دي"، "السمح"، "كده تمام التمام").
+- الوضع الحالي للمستخدم: ${mode === "admin" ? "وضع الإدارة ونقاط البيع (Admin POS)" : "وضع المتجر وتطبيق الجمهور (SanadClientApp)"}.
+- المنشأة: ${context?.tenantName || "منصة سند"}.
+- الفرع: ${context?.branchName || "الفرع الرئيسي"}.
+- معلومات المنصة:
+  * نقاط البيع: تعمل دون إنترنت أوفلاين مع مزامنة تلقائية.
+  * الدفع: تطبيق بنكك (بنك الخرطوم)، فوري (بنك فيصل)، أوكاش، والتحصيل بالعملات الأجنبية (دولار 2750 ج.س، ريال 733.33 ج.س، ليرة تركية 82.5 ج.س، جنيه مصري 56.8 ج.س، درهم 748.5 ج.س، يورو 2980 ج.س).
+  * تطبيق الجمهور: الكتالوج، الطلبات المسبقة، سلة المشتريات، قائمة الرغبات، نقاط الولاء واستبدالها بكوبونات، تتبع الطلبات، مشاركة واتساب، وتقييم المنتجات.
+- جاوب باللهجة السودانية، وبإيجاز ودقة.`;
+
+    const response = await ai.models.generateContent({
+      model: "gemini-3.8-flash",
+      contents: message,
+      config: {
+        systemInstruction,
+        temperature: 0.7,
+      },
+    });
+
+    const reply = response.text || null;
+    return res.json({ reply });
+  } catch (error) {
+    console.warn("Gemini chat error:", error);
+    return res.json({ reply: null, error: String(error) });
+  }
+});

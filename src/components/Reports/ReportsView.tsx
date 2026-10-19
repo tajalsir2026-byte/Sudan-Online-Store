@@ -1,5 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import {
+  ResponsiveContainer,
+  AreaChart,
+  Area,
+  BarChart,
+  Bar,
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  Tooltip,
+  Legend,
+  CartesianGrid,
+} from 'recharts';
+import {
   BarChart3,
   TrendingUp,
   TrendingDown,
@@ -17,6 +31,7 @@ import {
   Percent,
   CheckCircle2,
   Sparkles,
+  GitCompare,
 } from 'lucide-react';
 import type { Branch } from '../../types/index.ts';
 import { api } from '../../lib/api.ts';
@@ -34,6 +49,7 @@ export const ReportsView: React.FC<ReportsViewProps> = ({ branches, currentBranc
   const [summary, setSummary] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [hoveredTrendIdx, setHoveredTrendIdx] = useState<number | null>(null);
+  const [profitTimeframe, setProfitTimeframe] = useState<'daily' | 'monthly'>('daily');
 
   const loadSummary = async () => {
     setIsLoading(true);
@@ -410,6 +426,303 @@ export const ReportsView: React.FC<ReportsViewProps> = ({ branches, currentBranc
                 <span className="font-bold text-emerald-800">صافي ربح</span>
               </span>
             </div>
+          </div>
+        </div>
+      </div>
+
+      {/* =========================================================================
+          RECHARTS INTERACTIVE ANALYTICS DASHBOARD (منحنيات الأرباح ومقارنة الفروع)
+          ========================================================================= */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* 1. Recharts Profit & Revenue Curve (Daily vs Monthly) */}
+        <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm flex flex-col justify-between">
+          <div className="flex flex-wrap items-center justify-between gap-3 mb-4 pb-3 border-b border-slate-100">
+            <div>
+              <div className="flex items-center gap-2">
+                <TrendingUp className="w-4 h-4 text-emerald-600" />
+                <h3 className="font-bold text-sm text-slate-900">
+                  منحنى الإيرادات والأرباح التفاعلي (Profit Curves)
+                </h3>
+              </div>
+              <p className="text-[11px] text-slate-500 mt-0.5">
+                تتبع مسار الأرباح الإجمالية والصافية ومطابقتها مع حجم المبيعات
+              </p>
+            </div>
+
+            {/* Daily / Monthly Timeframe Switcher */}
+            <div className="flex items-center bg-slate-100 p-0.5 rounded-lg text-xs font-semibold">
+              <button
+                onClick={() => setProfitTimeframe('daily')}
+                className={`px-3 py-1 rounded-md transition-all ${
+                  profitTimeframe === 'daily'
+                    ? 'bg-white text-emerald-700 shadow-xs'
+                    : 'text-slate-600 hover:text-slate-900'
+                }`}
+              >
+                يومي (7 أيام)
+              </button>
+              <button
+                onClick={() => setProfitTimeframe('monthly')}
+                className={`px-3 py-1 rounded-md transition-all ${
+                  profitTimeframe === 'monthly'
+                    ? 'bg-white text-emerald-700 shadow-xs'
+                    : 'text-slate-600 hover:text-slate-900'
+                }`}
+              >
+                شهري (6 أشهر)
+              </button>
+            </div>
+          </div>
+
+          {/* Recharts Area / Line Chart Container */}
+          <div className="w-full h-72">
+            <ResponsiveContainer width="100%" height="100%">
+              {profitTimeframe === 'daily' ? (
+                <AreaChart
+                  data={summary.trend || []}
+                  margin={{ top: 10, right: 10, left: 10, bottom: 0 }}
+                >
+                  <defs>
+                    <linearGradient id="recRevenueGrad" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#0284c7" stopOpacity={0.25} />
+                      <stop offset="95%" stopColor="#0284c7" stopOpacity={0.0} />
+                    </linearGradient>
+                    <linearGradient id="recProfitGrad" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#10b981" stopOpacity={0.35} />
+                      <stop offset="95%" stopColor="#10b981" stopOpacity={0.0} />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
+                  <XAxis
+                    dataKey="label"
+                    tick={{ fontSize: 10, fill: '#64748b' }}
+                    tickLine={false}
+                    axisLine={{ stroke: '#e2e8f0' }}
+                  />
+                  <YAxis
+                    tick={{ fontSize: 10, fill: '#64748b' }}
+                    tickLine={false}
+                    axisLine={false}
+                    tickFormatter={(val) => `${Math.round(val / 1000)}k`}
+                  />
+                  <Tooltip
+                    content={({ active, payload, label }) => {
+                      if (!active || !payload || !payload.length) return null;
+                      return (
+                        <div className="bg-slate-900 text-white text-xs p-3 rounded-xl shadow-lg border border-slate-800 space-y-1 font-mono">
+                          <p className="font-bold text-slate-200 border-b border-slate-700 pb-1 mb-1 font-sans">
+                            {label}
+                          </p>
+                          <div className="flex items-center justify-between gap-4 text-sky-400">
+                            <span>المبيعات:</span>
+                            <span className="font-bold">{Number(payload[0]?.value).toLocaleString()} ج.س</span>
+                          </div>
+                          <div className="flex items-center justify-between gap-4 text-emerald-400">
+                            <span>الربح الإجمالي:</span>
+                            <span className="font-bold">{Number(payload[1]?.value).toLocaleString()} ج.س</span>
+                          </div>
+                        </div>
+                      );
+                    }}
+                  />
+                  <Legend
+                    verticalAlign="top"
+                    align="right"
+                    iconType="circle"
+                    formatter={(val) => (
+                      <span className="text-xs text-slate-600 font-medium">
+                        {val === 'revenue' ? 'إجمالي المبيعات' : 'إجمالي الأرباح'}
+                      </span>
+                    )}
+                  />
+                  <Area
+                    type="monotone"
+                    dataKey="revenue"
+                    stroke="#0284c7"
+                    strokeWidth={2.5}
+                    fillOpacity={1}
+                    fill="url(#recRevenueGrad)"
+                  />
+                  <Area
+                    type="monotone"
+                    dataKey="profit"
+                    stroke="#059669"
+                    strokeWidth={2.5}
+                    fillOpacity={1}
+                    fill="url(#recProfitGrad)"
+                  />
+                </AreaChart>
+              ) : (
+                <AreaChart
+                  data={summary.monthlyTrend || []}
+                  margin={{ top: 10, right: 10, left: 10, bottom: 0 }}
+                >
+                  <defs>
+                    <linearGradient id="monthRevGrad" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.25} />
+                      <stop offset="95%" stopColor="#3b82f6" stopOpacity={0.0} />
+                    </linearGradient>
+                    <linearGradient id="monthNetGrad" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#10b981" stopOpacity={0.35} />
+                      <stop offset="95%" stopColor="#10b981" stopOpacity={0.0} />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
+                  <XAxis
+                    dataKey="monthName"
+                    tick={{ fontSize: 10, fill: '#64748b' }}
+                    tickLine={false}
+                    axisLine={{ stroke: '#e2e8f0' }}
+                  />
+                  <YAxis
+                    tick={{ fontSize: 10, fill: '#64748b' }}
+                    tickLine={false}
+                    axisLine={false}
+                    tickFormatter={(val) => `${Math.round(val / 1000)}k`}
+                  />
+                  <Tooltip
+                    content={({ active, payload, label }) => {
+                      if (!active || !payload || !payload.length) return null;
+                      return (
+                        <div className="bg-slate-900 text-white text-xs p-3 rounded-xl shadow-lg border border-slate-800 space-y-1 font-mono">
+                          <p className="font-bold text-slate-200 border-b border-slate-700 pb-1 mb-1 font-sans">
+                            {label}
+                          </p>
+                          <div className="flex items-center justify-between gap-4 text-blue-400">
+                            <span>المبيعات:</span>
+                            <span className="font-bold">{Number(payload[0]?.value).toLocaleString()} ج.س</span>
+                          </div>
+                          <div className="flex items-center justify-between gap-4 text-emerald-400">
+                            <span>صافي الأرباح:</span>
+                            <span className="font-bold">{Number(payload[1]?.value).toLocaleString()} ج.س</span>
+                          </div>
+                        </div>
+                      );
+                    }}
+                  />
+                  <Legend
+                    verticalAlign="top"
+                    align="right"
+                    iconType="circle"
+                    formatter={(val) => (
+                      <span className="text-xs text-slate-600 font-medium">
+                        {val === 'revenue' ? 'المبيعات الشهرية' : 'صافي الأرباح'}
+                      </span>
+                    )}
+                  />
+                  <Area
+                    type="monotone"
+                    dataKey="revenue"
+                    stroke="#3b82f6"
+                    strokeWidth={2.5}
+                    fillOpacity={1}
+                    fill="url(#monthRevGrad)"
+                  />
+                  <Area
+                    type="monotone"
+                    dataKey="netProfit"
+                    stroke="#059669"
+                    strokeWidth={2.5}
+                    fillOpacity={1}
+                    fill="url(#monthNetGrad)"
+                  />
+                </AreaChart>
+              )}
+            </ResponsiveContainer>
+          </div>
+        </div>
+
+        {/* 2. Recharts Branch Performance Comparison (مقارنة أداء الفروع) */}
+        <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm flex flex-col justify-between">
+          <div className="flex items-center justify-between mb-4 pb-3 border-b border-slate-100">
+            <div>
+              <div className="flex items-center gap-2">
+                <GitCompare className="w-4 h-4 text-indigo-600" />
+                <h3 className="font-bold text-sm text-slate-900">
+                  مقارنة أداء الفروع في الأرباح والمبيعات
+                </h3>
+              </div>
+              <p className="text-[11px] text-slate-500 mt-0.5">
+                مقارنة حجم الإيرادات وصافي الأرباح ونسب الهامش بين فروع المنشأة
+              </p>
+            </div>
+            <span className="text-[11px] bg-indigo-50 text-indigo-800 border border-indigo-200 px-2.5 py-0.5 rounded-full font-semibold">
+              {summary.branchComparison?.length || branches.length} فروع نشطة
+            </span>
+          </div>
+
+          {/* Grouped Bar Chart */}
+          <div className="w-full h-72">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart
+                data={summary.branchComparison || []}
+                margin={{ top: 10, right: 10, left: 10, bottom: 0 }}
+                barGap={6}
+              >
+                <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
+                <XAxis
+                  dataKey="branchName"
+                  tick={{ fontSize: 10, fill: '#64748b' }}
+                  tickLine={false}
+                  axisLine={{ stroke: '#e2e8f0' }}
+                />
+                <YAxis
+                  tick={{ fontSize: 10, fill: '#64748b' }}
+                  tickLine={false}
+                  axisLine={false}
+                  tickFormatter={(val) => `${Math.round(val / 1000)}k`}
+                />
+                <Tooltip
+                  content={({ active, payload, label }) => {
+                    if (!active || !payload || !payload.length) return null;
+                    const bData = payload[0]?.payload;
+                    return (
+                      <div className="bg-slate-900 text-white text-xs p-3 rounded-xl shadow-lg border border-slate-800 space-y-1.5 font-mono">
+                        <div className="flex items-center justify-between border-b border-slate-700 pb-1 mb-1 font-sans">
+                          <span className="font-bold text-slate-200">{label}</span>
+                          <span className="text-[10px] bg-indigo-900/60 text-indigo-300 px-1.5 py-0.5 rounded font-mono">
+                            هامش: {bData?.marginPct}%
+                          </span>
+                        </div>
+                        <div className="flex items-center justify-between gap-4 text-sky-400">
+                          <span>المبيعات:</span>
+                          <span className="font-bold">{Number(bData?.revenue).toLocaleString()} ج.س</span>
+                        </div>
+                        <div className="flex items-center justify-between gap-4 text-emerald-400">
+                          <span>الربح الإجمالي:</span>
+                          <span className="font-bold">{Number(bData?.grossProfit).toLocaleString()} ج.س</span>
+                        </div>
+                        <div className="flex items-center justify-between gap-4 text-teal-300">
+                          <span>صافي الربح:</span>
+                          <span className="font-bold">{Number(bData?.netProfit).toLocaleString()} ج.س</span>
+                        </div>
+                        <div className="flex items-center justify-between gap-4 text-slate-400 pt-1 border-t border-slate-800 text-[10px]">
+                          <span>عدد الفواتير:</span>
+                          <span>{bData?.salesCount} عملية</span>
+                        </div>
+                      </div>
+                    );
+                  }}
+                />
+                <Legend
+                  verticalAlign="top"
+                  align="right"
+                  iconType="circle"
+                  formatter={(val) => (
+                    <span className="text-xs text-slate-600 font-medium">
+                      {val === 'revenue'
+                        ? 'إجمالي المبيعات'
+                        : val === 'grossProfit'
+                        ? 'الربح التجاري'
+                        : 'صافي الربح'}
+                    </span>
+                  )}
+                />
+                <Bar dataKey="revenue" fill="#38bdf8" radius={[4, 4, 0, 0]} />
+                <Bar dataKey="grossProfit" fill="#10b981" radius={[4, 4, 0, 0]} />
+                <Bar dataKey="netProfit" fill="#047857" radius={[4, 4, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
           </div>
         </div>
       </div>

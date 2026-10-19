@@ -15,17 +15,21 @@ import {
   Unlock,
   DollarSign,
   X,
+  Sparkles,
+  Tag,
 } from 'lucide-react';
-import type { AuditLog } from '../../types/index.ts';
+import type { AuditLog, Product } from '../../types/index.ts';
 import { api } from '../../lib/api.ts';
 import { ThermalReceiptSettingsView } from './ThermalReceiptSettingsView.tsx';
+import { PromotionsSettingsView } from './PromotionsSettingsView.tsx';
 
 export const CentralAdminView: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<'merchants' | 'payments_queue' | 'audit_trail' | 'receipt_settings'>('merchants');
+  const [activeTab, setActiveTab] = useState<'merchants' | 'payments_queue' | 'audit_trail' | 'receipt_settings' | 'promotions'>('merchants');
   const [tenants, setTenants] = useState<any[]>([]);
   const [payments, setPayments] = useState<any[]>([]);
   const [stats, setStats] = useState<any>(null);
   const [auditLogs, setAuditLogs] = useState<AuditLog[]>([]);
+  const [products, setProducts] = useState<Product[]>([]);
 
   // Review Payment Modal
   const [reviewingPayment, setReviewingPayment] = useState<any | null>(null);
@@ -46,6 +50,9 @@ export const CentralAdminView: React.FC = () => {
 
       const aRes = await api.getAuditLogs();
       setAuditLogs(aRes.logs);
+
+      const prodRes = await api.getProducts();
+      setProducts(prodRes.products);
     } catch (err) {
       console.warn('Failed loading admin data:', err);
     }
@@ -138,6 +145,15 @@ export const CentralAdminView: React.FC = () => {
             }`}
           >
             <span>إعدادات الفاتورة الحرارية</span>
+          </button>
+          <button
+            onClick={() => setActiveTab('promotions')}
+            className={`px-3 py-1.5 rounded-md transition-colors flex items-center gap-1.5 ${
+              activeTab === 'promotions' ? 'bg-white text-orange-700 shadow-sm font-bold' : 'text-slate-600'
+            }`}
+          >
+            <Sparkles className="w-3.5 h-3.5 text-orange-600" />
+            <span>نظام العروض الترويجية</span>
           </button>
         </div>
       </div>
@@ -351,6 +367,9 @@ export const CentralAdminView: React.FC = () => {
 
       {/* Tab 4: Thermal Receipt Customization */}
       {activeTab === 'receipt_settings' && <ThermalReceiptSettingsView />}
+
+      {/* Tab 5: Promotional Offers Management */}
+      {activeTab === 'promotions' && <PromotionsSettingsView products={products} />}
 
       {/* =========================================================================
           REVIEW PAYMENT MODAL

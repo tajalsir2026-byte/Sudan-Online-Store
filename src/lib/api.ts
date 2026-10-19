@@ -19,6 +19,13 @@ import type {
   Customer,
   AlbandarListing,
   AlbandarShowroom,
+  KitchenTicket,
+  KitchenStatus,
+  RecurringExpense,
+  PromotionRule,
+  InventoryAlert,
+  InventoryAudit,
+  InventoryAuditItem,
 } from '../types/index.ts';
 
 import {
@@ -619,6 +626,231 @@ class ApiClient {
 
   public async incrementListingView(id: string): Promise<{ success: boolean; viewsCount: number }> {
     return this.request(`/albandar/listings/${id}/view`, {
+      method: 'POST',
+    });
+  }
+
+  /* ==========================================
+     Kitchen Display System (KDS)
+     ========================================== */
+  public async getKitchenTickets(branchId?: string, status?: string): Promise<{ tickets: KitchenTicket[] }> {
+    const params = new URLSearchParams();
+    if (branchId) params.append('branchId', branchId);
+    if (status) params.append('status', status);
+    const qs = params.toString() ? `?${params.toString()}` : '';
+    return this.request(`/kitchen/tickets${qs}`);
+  }
+
+  public async updateKitchenTicketStatus(
+    id: string,
+    status: KitchenStatus
+  ): Promise<{ success: boolean; ticket: KitchenTicket }> {
+    return this.request(`/kitchen/tickets/${id}/status`, {
+      method: 'PUT',
+      body: JSON.stringify({ status }),
+    });
+  }
+
+  public async updateKitchenItemStatus(
+    ticketId: string,
+    itemId: string,
+    status: KitchenStatus
+  ): Promise<{ success: boolean; ticket: KitchenTicket }> {
+    return this.request(`/kitchen/tickets/${ticketId}/items/${itemId}/status`, {
+      method: 'PUT',
+      body: JSON.stringify({ status }),
+    });
+  }
+
+  /* ==========================================
+     Recurring Expenses (المصروفات الدورية)
+     ========================================== */
+  public async getRecurringExpenses(branchId?: string): Promise<{ recurringExpenses: RecurringExpense[] }> {
+    const qs = branchId ? `?branchId=${branchId}` : '';
+    return this.request(`/recurring-expenses${qs}`);
+  }
+
+  public async createRecurringExpense(
+    data: Partial<RecurringExpense>
+  ): Promise<{ success: boolean; recurringExpense: RecurringExpense }> {
+    return this.request('/recurring-expenses', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
+  public async updateRecurringExpense(
+    id: string,
+    data: Partial<RecurringExpense>
+  ): Promise<{ success: boolean; recurringExpense: RecurringExpense }> {
+    return this.request(`/recurring-expenses/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    });
+  }
+
+  public async deleteRecurringExpense(id: string): Promise<{ success: boolean; message: string }> {
+    return this.request(`/recurring-expenses/${id}`, {
+      method: 'DELETE',
+    });
+  }
+
+  public async postRecurringExpenseNow(id: string): Promise<{
+    success: boolean;
+    message: string;
+    expense: Expense;
+    recurringExpense: RecurringExpense;
+  }> {
+    return this.request(`/recurring-expenses/${id}/post-now`, {
+      method: 'POST',
+    });
+  }
+
+  /* ==========================================
+     Promotional Offers (العروض الترويجية)
+     ========================================== */
+  public async getPromotions(): Promise<{ promotions: PromotionRule[] }> {
+    return this.request('/promotions');
+  }
+
+  public async createPromotion(
+    data: Partial<PromotionRule>
+  ): Promise<{ success: boolean; promotion: PromotionRule }> {
+    return this.request('/promotions', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
+  public async updatePromotion(
+    id: string,
+    data: Partial<PromotionRule>
+  ): Promise<{ success: boolean; promotion: PromotionRule }> {
+    return this.request(`/promotions/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    });
+  }
+
+  public async deletePromotion(id: string): Promise<{ success: boolean; message: string }> {
+    return this.request(`/promotions/${id}`, {
+      method: 'DELETE',
+    });
+  }
+
+  /* ==========================================
+     Inventory Alerts (نظام تنبيهات حد إعادة الطلب)
+     ========================================== */
+  public async getInventoryAlerts(branchId?: string): Promise<{
+    alerts: InventoryAlert[];
+    unreadCount: number;
+    criticalCount: number;
+  }> {
+    const query = branchId ? `?branchId=${branchId}` : '';
+    return this.request(`/inventory/alerts${query}`);
+  }
+
+  public async syncInventoryAlerts(branchId?: string): Promise<{
+    success: boolean;
+    alerts: InventoryAlert[];
+    unreadCount: number;
+    criticalCount: number;
+  }> {
+    return this.request('/inventory/alerts/sync', {
+      method: 'POST',
+      body: JSON.stringify({ branchId }),
+    });
+  }
+
+  public async markInventoryAlertRead(id: string): Promise<{ success: boolean }> {
+    return this.request(`/inventory/alerts/${id}/read`, {
+      method: 'POST',
+    });
+  }
+
+  public async dismissInventoryAlert(id: string): Promise<{ success: boolean }> {
+    return this.request(`/inventory/alerts/${id}/dismiss`, {
+      method: 'POST',
+    });
+  }
+
+  /* ==========================================
+     CSV Products & Inventory Bulk Import
+     ========================================== */
+  public async importProductsCsv(
+    branchId: string,
+    items: Array<{
+      name: string;
+      sku?: string;
+      barcode?: string;
+      category?: string;
+      unit?: string;
+      purchaseCost?: number;
+      costCurrency?: string;
+      sellingPriceSdg: number;
+      minStockAlert?: number;
+      initialStock?: number;
+      isTaxExempt?: boolean;
+      customTaxRate?: number;
+    }>
+  ): Promise<{
+    success: boolean;
+    importedCount: number;
+    errors: string[];
+    products: any[];
+  }> {
+    return this.request('/inventory/import-csv', {
+      method: 'POST',
+      body: JSON.stringify({ branchId, items }),
+    });
+  }
+
+  /* ==========================================
+     Smart Inventory Audit (تدقيق وجرد المخزون الذكي)
+     ========================================== */
+  public async getInventoryAudits(branchId?: string): Promise<{ success: boolean; audits: InventoryAudit[] }> {
+    const q = branchId ? `?branchId=${branchId}` : '';
+    return this.request(`/inventory/audits${q}`);
+  }
+
+  public async getInventoryAudit(id: string): Promise<{ success: boolean; audit: InventoryAudit }> {
+    return this.request(`/inventory/audits/${id}`);
+  }
+
+  public async createInventoryAudit(payload: {
+    branchId: string;
+    title?: string;
+    scope?: 'all' | 'category' | 'partial';
+    categoryFilter?: string;
+    deviceInfo?: string;
+    notes?: string;
+  }): Promise<{ success: boolean; audit: InventoryAudit }> {
+    return this.request('/inventory/audits', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    });
+  }
+
+  public async updateInventoryAudit(
+    id: string,
+    updates: Partial<InventoryAudit>
+  ): Promise<{ success: boolean; audit: InventoryAudit }> {
+    return this.request(`/inventory/audits/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(updates),
+    });
+  }
+
+  public async reconcileInventoryAudit(
+    id: string
+  ): Promise<{ success: boolean; audit: InventoryAudit; adjustedCount: number }> {
+    return this.request(`/inventory/audits/${id}/reconcile`, {
+      method: 'POST',
+    });
+  }
+
+  public async cancelInventoryAudit(id: string): Promise<{ success: boolean }> {
+    return this.request(`/inventory/audits/${id}/cancel`, {
       method: 'POST',
     });
   }

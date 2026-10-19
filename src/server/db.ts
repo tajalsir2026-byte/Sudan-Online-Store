@@ -22,6 +22,13 @@ import type {
   AlbandarListing,
   AlbandarShowroom,
   Customer,
+  KitchenTicket,
+  KitchenStatus,
+  RecurringExpense,
+  PromotionRule,
+  InventoryAlert,
+  InventoryAudit,
+  InventoryAuditItem,
 } from '../types/index.ts';
 
 export interface DatabaseSchema {
@@ -46,6 +53,11 @@ export interface DatabaseSchema {
   auditLogs: AuditLog[];
   albandarListings: AlbandarListing[];
   albandarShowrooms: AlbandarShowroom[];
+  kitchenTickets: KitchenTicket[];
+  recurringExpenses: RecurringExpense[];
+  promotions: PromotionRule[];
+  inventoryAlerts: InventoryAlert[];
+  inventoryAudits: InventoryAudit[];
 }
 
 const DATA_DIR = path.resolve(process.cwd(), '.data');
@@ -438,6 +450,8 @@ const INITIAL_CURRENCIES: CurrencyConfig[] = [
   { code: 'SDG', name: 'جنيه سوداني', symbol: 'ج.س', rateToSdg: 1, isBase: true, isActive: true, lastUpdated: new Date().toISOString() },
   { code: 'USD', name: 'دولار أمريكي', symbol: '$', rateToSdg: 2750, isBase: false, isActive: true, lastUpdated: new Date().toISOString() },
   { code: 'SAR', name: 'ريال سعودي', symbol: 'ر.س', rateToSdg: 733.33, isBase: false, isActive: true, lastUpdated: new Date().toISOString() },
+  { code: 'TRY', name: 'ليرة تركية', symbol: '₺', rateToSdg: 82.5, isBase: false, isActive: true, lastUpdated: new Date().toISOString() },
+  { code: 'EGP', name: 'جنيه مصري', symbol: 'ج.م', rateToSdg: 56.8, isBase: false, isActive: true, lastUpdated: new Date().toISOString() },
   { code: 'AED', name: 'درهم إماراتي', symbol: 'د.إ', rateToSdg: 748.5, isBase: false, isActive: true, lastUpdated: new Date().toISOString() },
   { code: 'EUR', name: 'يورو أوروبي', symbol: '€', rateToSdg: 2980, isBase: false, isActive: true, lastUpdated: new Date().toISOString() },
   { code: 'QAR', name: 'ريال قطري', symbol: 'ر.ق', rateToSdg: 755, isBase: false, isActive: true, lastUpdated: new Date().toISOString() },
@@ -678,6 +692,179 @@ const INITIAL_EXPENSES: Expense[] = [
     paidBy: 'إبراهيم علي',
     receiptNumber: 'LOG-771',
     createdAt: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000).toISOString(),
+  },
+];
+
+const INITIAL_RECURRING_EXPENSES: RecurringExpense[] = [
+  {
+    id: 'recexp_01',
+    tenantId: 'tenant_alrowad',
+    branchId: 'branch_kht_main',
+    branchName: 'فرع الخرطوم الرئيسي',
+    title: 'إيجار العقار والمقر التجاري الرئيسي',
+    category: 'إيجار',
+    amountSdg: 350000,
+    frequency: 'monthly',
+    dayOfMonth: 1,
+    nextDueDate: new Date(Date.now() + 12 * 24 * 3600 * 1000).toISOString().split('T')[0],
+    lastPostedDate: new Date(Date.now() - 18 * 24 * 3600 * 1000).toISOString().split('T')[0],
+    autoPost: true,
+    isActive: true,
+    notes: 'تحويل الحساب للمالك عبر تطبيق بنكك أول كل شهر ميلادي',
+    createdAt: new Date(Date.now() - 60 * 24 * 3600 * 1000).toISOString(),
+  },
+  {
+    id: 'recexp_02',
+    tenantId: 'tenant_alrowad',
+    branchId: 'branch_kht_main',
+    branchName: 'فرع الخرطوم الرئيسي',
+    title: 'رواتب موظفي وعمال الفرع الشهري',
+    category: 'رواتب',
+    amountSdg: 850000,
+    frequency: 'monthly',
+    dayOfMonth: 28,
+    nextDueDate: new Date(Date.now() + 10 * 24 * 3600 * 1000).toISOString().split('T')[0],
+    lastPostedDate: new Date(Date.now() - 20 * 24 * 3600 * 1000).toISOString().split('T')[0],
+    autoPost: true,
+    isActive: true,
+    notes: 'مسير الرواتب لعدد 5 موظفين وكاشير وعمال النظافة',
+    createdAt: new Date(Date.now() - 60 * 24 * 3600 * 1000).toISOString(),
+  },
+  {
+    id: 'recexp_03',
+    tenantId: 'tenant_alrowad',
+    branchId: 'branch_kht_main',
+    branchName: 'فرع الخرطوم الرئيسي',
+    title: 'اشتراك فايبر إنترنت وسيرفر نقاط البيع (كانار/سوداني)',
+    category: 'إنترنت واتصالات',
+    amountSdg: 45000,
+    frequency: 'monthly',
+    dayOfMonth: 5,
+    nextDueDate: new Date(Date.now() + 16 * 24 * 3600 * 1000).toISOString().split('T')[0],
+    lastPostedDate: new Date(Date.now() - 14 * 24 * 3600 * 1000).toISOString().split('T')[0],
+    autoPost: false,
+    isActive: true,
+    notes: 'اشتراك إنترنت النطاق العريض غير المحدود مع خط احتياطي شريحة 4G',
+    createdAt: new Date(Date.now() - 40 * 24 * 3600 * 1000).toISOString(),
+  },
+  {
+    id: 'recexp_04',
+    tenantId: 'tenant_alrowad',
+    branchId: 'branch_kht_main',
+    branchName: 'فرع الخرطوم الرئيسي',
+    title: 'شحن كروت كهرباء تجاري 3 فاز أسبوعي',
+    category: 'كهرباء ومياه',
+    amountSdg: 30000,
+    frequency: 'weekly',
+    dayOfWeek: 0,
+    nextDueDate: new Date(Date.now() + 2 * 24 * 3600 * 1000).toISOString().split('T')[0],
+    lastPostedDate: new Date(Date.now() - 5 * 24 * 3600 * 1000).toISOString().split('T')[0],
+    autoPost: true,
+    isActive: true,
+    notes: 'شحن عداد الدفع المسبق لضمان عمل أجهزة التبريد والثلاجات المستمر',
+    createdAt: new Date(Date.now() - 30 * 24 * 3600 * 1000).toISOString(),
+  },
+];
+
+const INITIAL_PROMOTIONS: PromotionRule[] = [
+  {
+    id: 'promo_01',
+    tenantId: 'tenant_alrowad',
+    title: 'عرض الصباح: اشترِ 2 واحصل على 1 مجاناً',
+    description: 'عند شراء قطعتين من شاي الغزالتين الأصلي احصل على الثالثة مجاناً',
+    type: 'buy_x_get_y',
+    buyProductId: 'prod_tea_ghazalteen',
+    buyProductName: 'شاي الغزالتين الأصلي 450 جم',
+    buyQuantity: 2,
+    freeProductId: 'prod_tea_ghazalteen',
+    freeProductName: 'شاي الغزالتين الأصلي 450 جم',
+    freeQuantity: 1,
+    isActive: true,
+    createdAt: new Date(Date.now() - 10 * 24 * 3600 * 1000).toISOString(),
+  },
+  {
+    id: 'promo_02',
+    tenantId: 'tenant_alrowad',
+    title: 'خصم الجملة: 10% عند شراء أكثر من 5 عبوات',
+    description: 'خصم فوري 10% على كل عبوة زيت صباح نقي عند شراء 5 قطع أو أكثر',
+    type: 'qty_discount_pct',
+    productId: 'prod_cooking_oil',
+    productName: 'زيت صباح نقي للطهي 4.5 لتر',
+    minQuantity: 5,
+    discountPct: 10,
+    isActive: true,
+    createdAt: new Date(Date.now() - 10 * 24 * 3600 * 1000).toISOString(),
+  },
+  {
+    id: 'promo_03',
+    tenantId: 'tenant_alrowad',
+    title: 'مكافأة السلة الكبيرة: خصم 5,000 ج.س عند تجاوز 100,000 ج.س',
+    description: 'خصم مقطوع ومباشر 5,000 جنيه سوداني على إجمالي الفاتورة عند وصول السلة إلى 100,000 جنيه',
+    type: 'cart_fixed_discount',
+    minCartTotalSdg: 100000,
+    discountAmountSdg: 5000,
+    isActive: true,
+    createdAt: new Date(Date.now() - 15 * 24 * 3600 * 1000).toISOString(),
+  },
+];
+
+const INITIAL_KITCHEN_TICKETS: KitchenTicket[] = [
+  {
+    id: 'kds_01',
+    saleId: 'sale_demo_01',
+    invoiceNumber: 'INV-2026-0001',
+    tenantId: 'tenant_alrowad',
+    branchId: 'branch_kht_main',
+    branchName: 'فرع الخرطوم الرئيسي',
+    customerName: 'م. عبد العظيم الفاتح',
+    orderType: 'quick_order',
+    status: 'preparing',
+    items: [
+      {
+        id: 'kds_item_1',
+        productId: 'prod_sugar_kenana',
+        productName: 'سكر كنانة نقي فاخر 10 كجم',
+        quantity: 2,
+        unit: 'كيس 10 كجم',
+        notes: 'طلب سريع - تجهيز للتسليم المباشر بالسيارة',
+        status: 'ready',
+      },
+      {
+        id: 'kds_item_2',
+        productId: 'prod_tea_ghazalteen',
+        productName: 'شاي الغزالتين الأصلي 450 جم',
+        quantity: 3,
+        unit: 'باكت',
+        notes: 'عرض اشتر 2 واحصل على 1 مجاناً - تغليف هدية',
+        status: 'preparing',
+      },
+    ],
+    createdAt: new Date(Date.now() - 14 * 60 * 1000).toISOString(),
+    updatedAt: new Date(Date.now() - 2 * 60 * 1000).toISOString(),
+  },
+  {
+    id: 'kds_02',
+    saleId: 'sale_demo_02',
+    invoiceNumber: 'INV-2026-0002',
+    tenantId: 'tenant_alrowad',
+    branchId: 'branch_kht_main',
+    branchName: 'فرع الخرطوم الرئيسي',
+    customerName: 'د. منى الطاهر',
+    orderType: 'takeaway',
+    status: 'pending',
+    items: [
+      {
+        id: 'kds_item_3',
+        productId: 'prod_cooking_oil',
+        productName: 'زيت صباح نقي للطهي 4.5 لتر',
+        quantity: 1,
+        unit: 'جركانة',
+        notes: 'طلب سريع - بدون شطة سفري / وضع في كيس مزدوج مقوى',
+        status: 'pending',
+      },
+    ],
+    createdAt: new Date(Date.now() - 4 * 60 * 1000).toISOString(),
+    updatedAt: new Date(Date.now() - 4 * 60 * 1000).toISOString(),
   },
 ];
 
@@ -1134,6 +1321,21 @@ class Database {
         if (!parsed.customers || parsed.customers.length === 0) {
           parsed.customers = INITIAL_CUSTOMERS;
         }
+        if (!parsed.recurringExpenses || parsed.recurringExpenses.length === 0) {
+          parsed.recurringExpenses = INITIAL_RECURRING_EXPENSES;
+        }
+        if (!parsed.promotions || parsed.promotions.length === 0) {
+          parsed.promotions = INITIAL_PROMOTIONS;
+        }
+        if (!parsed.kitchenTickets || parsed.kitchenTickets.length === 0) {
+          parsed.kitchenTickets = INITIAL_KITCHEN_TICKETS;
+        }
+        if (!parsed.inventoryAlerts) {
+          parsed.inventoryAlerts = [];
+        }
+        if (!parsed.inventoryAudits) {
+          parsed.inventoryAudits = [];
+        }
         // Ensure tenants have default VAT configuration
         if (Array.isArray(parsed.tenants)) {
           for (const t of parsed.tenants) {
@@ -1178,6 +1380,11 @@ class Database {
       auditLogs: INITIAL_AUDIT_LOGS,
       albandarListings: INITIAL_ALBANDAR_LISTINGS,
       albandarShowrooms: INITIAL_ALBANDAR_SHOWROOMS,
+      recurringExpenses: INITIAL_RECURRING_EXPENSES,
+      promotions: INITIAL_PROMOTIONS,
+      kitchenTickets: INITIAL_KITCHEN_TICKETS,
+      inventoryAlerts: [],
+      inventoryAudits: [],
     };
 
     this.save(initialData);
@@ -1313,6 +1520,43 @@ class Database {
     };
     this.data.stockMovements.unshift(movement);
 
+    // Automated Reorder Point Alert Check
+    if (!this.data.inventoryAlerts) this.data.inventoryAlerts = [];
+    const threshold = product ? (product.minimumStock !== undefined ? product.minimumStock : product.minStockAlert) : 5;
+    const branch = this.data.branches.find((b) => b.id === params.branchId);
+    const branchName = branch ? branch.name : 'الفرع الرئيسي';
+
+    if (newQty <= threshold) {
+      const existingAlert = this.data.inventoryAlerts.find(
+        (a) => a.tenantId === params.tenantId && a.branchId === params.branchId && a.productId === params.productId && a.status !== 'dismissed'
+      );
+      if (existingAlert) {
+        existingAlert.currentQuantity = newQty;
+        existingAlert.severity = newQty === 0 ? 'critical' : 'warning';
+        existingAlert.status = 'unread';
+      } else {
+        this.data.inventoryAlerts.unshift({
+          id: `alt_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
+          tenantId: params.tenantId,
+          branchId: params.branchId,
+          branchName,
+          productId: params.productId,
+          productName: product?.name || 'منتج',
+          sku: product?.sku || '',
+          currentQuantity: newQty,
+          reorderPoint: threshold,
+          severity: newQty === 0 ? 'critical' : 'warning',
+          status: 'unread',
+          createdAt: new Date().toISOString(),
+        });
+      }
+    } else {
+      // If stock has been replenished above the reorder point, clear active alerts for this product
+      this.data.inventoryAlerts = this.data.inventoryAlerts.filter(
+        (a) => !(a.tenantId === params.tenantId && a.branchId === params.branchId && a.productId === params.productId)
+      );
+    }
+
     this.commit();
     return { success: true, newBalance: newQty };
   }
@@ -1397,6 +1641,609 @@ class Database {
       return { cust, earnedPoints };
     }
     return null;
+  }
+
+  // ==========================================
+  // Recurring Expenses (المصروفات الدورية)
+  // ==========================================
+  public getRecurringExpenses(tenantId: string, branchId?: string): RecurringExpense[] {
+    let list = (this.data.recurringExpenses || []).filter((r) => r.tenantId === tenantId);
+    if (branchId) {
+      list = list.filter((r) => r.branchId === branchId);
+    }
+    return list;
+  }
+
+  public addRecurringExpense(item: RecurringExpense): RecurringExpense {
+    if (!this.data.recurringExpenses) this.data.recurringExpenses = [];
+    this.data.recurringExpenses.unshift(item);
+    this.commit();
+    return item;
+  }
+
+  public updateRecurringExpense(
+    tenantId: string,
+    id: string,
+    updates: Partial<RecurringExpense>
+  ): RecurringExpense | null {
+    if (!this.data.recurringExpenses) this.data.recurringExpenses = [];
+    const idx = this.data.recurringExpenses.findIndex((r) => r.id === id && r.tenantId === tenantId);
+    if (idx === -1) return null;
+    this.data.recurringExpenses[idx] = { ...this.data.recurringExpenses[idx], ...updates };
+    this.commit();
+    return this.data.recurringExpenses[idx];
+  }
+
+  public deleteRecurringExpense(tenantId: string, id: string): boolean {
+    if (!this.data.recurringExpenses) return false;
+    const initialLen = this.data.recurringExpenses.length;
+    this.data.recurringExpenses = this.data.recurringExpenses.filter(
+      (r) => !(r.id === id && r.tenantId === tenantId)
+    );
+    if (this.data.recurringExpenses.length !== initialLen) {
+      this.commit();
+      return true;
+    }
+    return false;
+  }
+
+  public postRecurringExpenseNow(tenantId: string, id: string, actorName: string = 'النظام الآلي') {
+    const rec = (this.data.recurringExpenses || []).find((r) => r.id === id && r.tenantId === tenantId);
+    if (!rec) return null;
+
+    const todayStr = new Date().toISOString().split('T')[0];
+    const newExpense: Expense = {
+      id: `exp_rec_${Date.now()}`,
+      tenantId: rec.tenantId,
+      branchId: rec.branchId,
+      branchName: rec.branchName,
+      category: rec.category,
+      amountSdg: rec.amountSdg,
+      description: `[مصروف دوري مجدول]: ${rec.title}`,
+      paidBy: actorName,
+      receiptNumber: `REC-${Date.now().toString().slice(-6)}`,
+      createdAt: new Date().toISOString(),
+    };
+
+    if (!this.data.expenses) this.data.expenses = [];
+    this.data.expenses.unshift(newExpense);
+
+    // Advance nextDueDate
+    const currDue = new Date(rec.nextDueDate);
+    if (rec.frequency === 'weekly') {
+      currDue.setDate(currDue.getDate() + 7);
+    } else if (rec.frequency === 'yearly') {
+      currDue.setFullYear(currDue.getFullYear() + 1);
+    } else {
+      // Monthly default
+      currDue.setMonth(currDue.getMonth() + 1);
+    }
+    rec.lastPostedDate = todayStr;
+    rec.nextDueDate = currDue.toISOString().split('T')[0];
+
+    this.commit();
+    return { expense: newExpense, recurring: rec };
+  }
+
+  // ==========================================
+  // Promotions Management (العروض الترويجية)
+  // ==========================================
+  public getPromotions(tenantId: string): PromotionRule[] {
+    return (this.data.promotions || []).filter((p) => p.tenantId === tenantId);
+  }
+
+  public addPromotion(promo: PromotionRule): PromotionRule {
+    if (!this.data.promotions) this.data.promotions = [];
+    this.data.promotions.unshift(promo);
+    this.commit();
+    return promo;
+  }
+
+  public updatePromotion(tenantId: string, id: string, updates: Partial<PromotionRule>): PromotionRule | null {
+    if (!this.data.promotions) this.data.promotions = [];
+    const idx = this.data.promotions.findIndex((p) => p.id === id && p.tenantId === tenantId);
+    if (idx === -1) return null;
+    this.data.promotions[idx] = { ...this.data.promotions[idx], ...updates };
+    this.commit();
+    return this.data.promotions[idx];
+  }
+
+  public deletePromotion(tenantId: string, id: string): boolean {
+    if (!this.data.promotions) return false;
+    const initialLen = this.data.promotions.length;
+    this.data.promotions = this.data.promotions.filter((p) => !(p.id === id && p.tenantId === tenantId));
+    if (this.data.promotions.length !== initialLen) {
+      this.commit();
+      return true;
+    }
+    return false;
+  }
+
+  // ==========================================
+  // Kitchen Display System (KDS)
+  // ==========================================
+  public getKitchenTickets(tenantId: string, branchId?: string, status?: string): KitchenTicket[] {
+    let list = (this.data.kitchenTickets || []).filter((t) => t.tenantId === tenantId);
+    if (branchId) {
+      list = list.filter((t) => t.branchId === branchId);
+    }
+    if (status && status !== 'all') {
+      list = list.filter((t) => t.status === status);
+    }
+    return list;
+  }
+
+  public updateKitchenTicketStatus(ticketId: string, status: KitchenStatus): KitchenTicket | null {
+    if (!this.data.kitchenTickets) this.data.kitchenTickets = [];
+    const ticket = this.data.kitchenTickets.find((t) => t.id === ticketId);
+    if (!ticket) return null;
+    ticket.status = status;
+    ticket.updatedAt = new Date().toISOString();
+    // Also update all items if ticket is marked completed or ready
+    if (status === 'completed' || status === 'ready') {
+      ticket.items.forEach((it) => {
+        it.status = status;
+      });
+    }
+    this.commit();
+    return ticket;
+  }
+
+  public updateKitchenItemStatus(ticketId: string, itemId: string, status: KitchenStatus): KitchenTicket | null {
+    if (!this.data.kitchenTickets) this.data.kitchenTickets = [];
+    const ticket = this.data.kitchenTickets.find((t) => t.id === ticketId);
+    if (!ticket) return null;
+    const it = ticket.items.find((i) => i.id === itemId);
+    if (it) {
+      it.status = status;
+      ticket.updatedAt = new Date().toISOString();
+      // If all items ready, mark ticket ready
+      if (ticket.items.every((i) => i.status === 'completed')) {
+        ticket.status = 'completed';
+      } else if (ticket.items.every((i) => i.status === 'ready' || i.status === 'completed')) {
+        ticket.status = 'ready';
+      } else if (ticket.items.some((i) => i.status === 'preparing')) {
+        ticket.status = 'preparing';
+      }
+      this.commit();
+    }
+    return ticket;
+  }
+
+  public createKitchenTicket(ticket: KitchenTicket): KitchenTicket {
+    if (!this.data.kitchenTickets) this.data.kitchenTickets = [];
+    this.data.kitchenTickets.unshift(ticket);
+    this.commit();
+    return ticket;
+  }
+
+  // ==========================================
+  // Inventory Alerts (نظام تنبيهات حد إعادة الطلب)
+  // ==========================================
+  public getInventoryAlerts(tenantId: string, branchId?: string): InventoryAlert[] {
+    if (!this.data.inventoryAlerts) this.data.inventoryAlerts = [];
+    // Automatically make sure alerts are current
+    this.syncInventoryAlerts(tenantId);
+    return this.data.inventoryAlerts.filter(
+      (a) => a.tenantId === tenantId && (!branchId || a.branchId === branchId)
+    );
+  }
+
+  public dismissInventoryAlert(tenantId: string, alertId: string): boolean {
+    if (!this.data.inventoryAlerts) return false;
+    const alert = this.data.inventoryAlerts.find((a) => a.tenantId === tenantId && a.id === alertId);
+    if (alert) {
+      alert.status = 'dismissed';
+      this.commit();
+      return true;
+    }
+    return false;
+  }
+
+  public markInventoryAlertRead(tenantId: string, alertId: string): boolean {
+    if (!this.data.inventoryAlerts) return false;
+    const alert = this.data.inventoryAlerts.find((a) => a.tenantId === tenantId && a.id === alertId);
+    if (alert && alert.status === 'unread') {
+      alert.status = 'read';
+      this.commit();
+      return true;
+    }
+    return false;
+  }
+
+  public syncInventoryAlerts(tenantId: string): InventoryAlert[] {
+    if (!this.data.inventoryAlerts) this.data.inventoryAlerts = [];
+    const tenantProducts = this.getProducts(tenantId);
+    const tenantBranches = this.getBranches(tenantId);
+
+    for (const br of tenantBranches) {
+      for (const prod of tenantProducts) {
+        const threshold = prod.minimumStock !== undefined ? prod.minimumStock : (prod.minStockAlert || 5);
+        const inv = this.data.branchInventories.find(
+          (i) => i.tenantId === tenantId && i.branchId === br.id && i.productId === prod.id
+        );
+        const currentQty = inv ? inv.quantity : 0;
+
+        if (currentQty <= threshold) {
+          const existing = this.data.inventoryAlerts.find(
+            (a) => a.tenantId === tenantId && a.branchId === br.id && a.productId === prod.id && a.status !== 'dismissed'
+          );
+          if (existing) {
+            existing.currentQuantity = currentQty;
+            existing.severity = currentQty === 0 ? 'critical' : 'warning';
+          } else {
+            this.data.inventoryAlerts.unshift({
+              id: `alt_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
+              tenantId,
+              branchId: br.id,
+              branchName: br.name,
+              productId: prod.id,
+              productName: prod.name,
+              sku: prod.sku,
+              currentQuantity: currentQty,
+              reorderPoint: threshold,
+              severity: currentQty === 0 ? 'critical' : 'warning',
+              status: 'unread',
+              createdAt: new Date().toISOString(),
+            });
+          }
+        } else {
+          // If stock is above threshold, clear active alerts for this product
+          this.data.inventoryAlerts = this.data.inventoryAlerts.filter(
+            (a) => !(a.tenantId === tenantId && a.branchId === br.id && a.productId === prod.id)
+          );
+        }
+      }
+    }
+    this.commit();
+    return this.data.inventoryAlerts.filter((a) => a.tenantId === tenantId);
+  }
+
+  // ==========================================
+  // CSV Products & Inventory Bulk Import (استيراد المنتجات والمخزون)
+  // ==========================================
+  public importProductsCsv(params: {
+    tenantId: string;
+    branchId: string;
+    items: Array<{
+      name: string;
+      sku?: string;
+      barcode?: string;
+      category?: string;
+      unit?: string;
+      purchaseCost?: number;
+      costCurrency?: string;
+      sellingPriceSdg: number;
+      minStockAlert?: number;
+      initialStock?: number;
+      isTaxExempt?: boolean;
+      customTaxRate?: number;
+    }>;
+    actorName: string;
+  }): { success: boolean; importedCount: number; errors: string[]; products: Product[] } {
+    const importedProducts: Product[] = [];
+    const errors: string[] = [];
+
+    for (let i = 0; i < params.items.length; i++) {
+      const item = params.items[i];
+      if (!item.name || !item.name.trim()) {
+        errors.push(`السطر ${i + 1}: اسم المنتج مفقود.`);
+        continue;
+      }
+      const price = Number(item.sellingPriceSdg);
+      if (isNaN(price) || price <= 0) {
+        errors.push(`السطر ${i + 1} (${item.name}): سعر البيع غير صالح.`);
+        continue;
+      }
+
+      const newProd: Product = {
+        id: `prod_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
+        tenantId: params.tenantId,
+        name: item.name.trim(),
+        sku: item.sku && item.sku.trim() ? item.sku.trim() : `SKU-${Date.now().toString().slice(-5)}${i}`,
+        barcode: item.barcode && item.barcode.trim() ? item.barcode.trim() : Math.floor(100000000000 + Math.random() * 900000000000).toString(),
+        category: item.category && item.category.trim() ? item.category.trim() : 'عام',
+        unit: item.unit && item.unit.trim() ? item.unit.trim() : 'حبة',
+        purchaseCost: Number(item.purchaseCost) || 0,
+        costCurrency: item.costCurrency || 'SDG',
+        sellingPriceSdg: price,
+        minStockAlert: Number(item.minStockAlert) || 5,
+        minimumStock: Number(item.minStockAlert) || 5,
+        isActive: true,
+        isTaxExempt: Boolean(item.isTaxExempt),
+        customTaxRate: item.customTaxRate !== undefined && item.customTaxRate !== null ? Number(item.customTaxRate) : undefined,
+        createdAt: new Date().toISOString(),
+      };
+
+      this.data.products.push(newProd);
+      importedProducts.push(newProd);
+
+      const initStock = Number(item.initialStock);
+      if (!isNaN(initStock) && initStock > 0 && params.branchId) {
+        this.adjustStock({
+          tenantId: params.tenantId,
+          branchId: params.branchId,
+          productId: newProd.id,
+          delta: initStock,
+          type: 'purchase_receive',
+          reason: 'استيراد رصيد مخزون افتتاحي من ملف CSV',
+          actorName: params.actorName,
+        });
+      }
+    }
+
+    if (importedProducts.length > 0) {
+      this.syncInventoryAlerts(params.tenantId);
+      this.commit();
+      this.logAudit({
+        tenantId: params.tenantId,
+        actorId: 'system',
+        actorName: params.actorName,
+        action: 'IMPORT_CSV_PRODUCTS',
+        entity: 'Product',
+        entityId: `batch_${Date.now()}`,
+        details: `استيراد جماعي لـ (${importedProducts.length}) منتج مع أرصدة المخزون عبر ملف CSV`,
+      });
+    }
+
+    return {
+      success: importedProducts.length > 0,
+      importedCount: importedProducts.length,
+      errors,
+      products: importedProducts,
+    };
+  }
+
+  // ==========================================
+  // Smart Inventory Audit System (تدقيق وجرد المخزون الذكي)
+  // ==========================================
+  public getInventoryAudits(tenantId: string, branchId?: string): InventoryAudit[] {
+    let audits = (this.data.inventoryAudits || []).filter((a) => a.tenantId === tenantId);
+    if (branchId) {
+      audits = audits.filter((a) => a.branchId === branchId);
+    }
+    return audits.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  }
+
+  public getInventoryAudit(tenantId: string, auditId: string): InventoryAudit | undefined {
+    return (this.data.inventoryAudits || []).find(
+      (a) => a.tenantId === tenantId && a.id === auditId
+    );
+  }
+
+  public createInventoryAudit(params: {
+    tenantId: string;
+    branchId: string;
+    title: string;
+    auditorId: string;
+    auditorName: string;
+    auditorRole: string;
+    scope?: 'all' | 'category' | 'partial';
+    categoryFilter?: string;
+    deviceInfo?: string;
+    notes?: string;
+  }): InventoryAudit {
+    const branch = this.data.branches.find((b) => b.id === params.branchId && b.tenantId === params.tenantId);
+    const branchName = branch ? branch.name : 'الفرع الرئيسي';
+
+    let prods = this.data.products.filter((p) => p.tenantId === params.tenantId && p.isActive !== false);
+    if (params.scope === 'category' && params.categoryFilter && params.categoryFilter !== 'الكل') {
+      prods = prods.filter((p) => p.category === params.categoryFilter);
+    }
+
+    const items: InventoryAuditItem[] = prods.map((prod) => {
+      const stock = this.getProductStock(params.tenantId, params.branchId, prod.id);
+      return {
+        productId: prod.id,
+        productName: prod.name,
+        sku: prod.sku,
+        barcode: prod.barcode || '',
+        category: prod.category || 'عام',
+        unit: prod.unit || 'حبة',
+        costPrice: prod.purchaseCost || 0,
+        sellingPrice: prod.sellingPriceSdg || 0,
+        systemQuantity: stock,
+        actualQuantity: 0,
+        difference: 0 - stock,
+        differenceCostValue: (0 - stock) * (prod.purchaseCost || 0),
+        status: 'uncounted',
+        notes: '',
+      };
+    });
+
+    const now = new Date();
+    const dateStr = now.toISOString().slice(0, 10).replace(/-/g, '');
+    const seq = (this.data.inventoryAudits?.length || 0) + 1;
+    const auditNumber = `AUD-${dateStr}-${String(seq).padStart(3, '0')}`;
+
+    const newAudit: InventoryAudit = {
+      id: `audit_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
+      tenantId: params.tenantId,
+      branchId: params.branchId,
+      branchName,
+      auditNumber,
+      title: params.title || `جرد مخزون ذكي - ${branchName}`,
+      status: 'in_progress',
+      startedAt: now.toISOString(),
+      auditorId: params.auditorId,
+      auditorName: params.auditorName,
+      auditorRole: params.auditorRole,
+      deviceInfo: params.deviceInfo || 'هاتف محمول ذكي',
+      scope: params.scope || 'all',
+      categoryFilter: params.categoryFilter,
+      items,
+      totalProductsCount: items.length,
+      countedProductsCount: 0,
+      matchedCount: 0,
+      deficitCount: 0,
+      surplusCount: 0,
+      uncountedCount: items.length,
+      totalDeficitValueSdg: 0,
+      totalSurplusValueSdg: 0,
+      netDiscrepancyCostSdg: 0,
+      reconciled: false,
+      notes: params.notes,
+      createdAt: now.toISOString(),
+      updatedAt: now.toISOString(),
+    };
+
+    if (!this.data.inventoryAudits) {
+      this.data.inventoryAudits = [];
+    }
+    this.data.inventoryAudits.unshift(newAudit);
+    this.commit();
+
+    this.logAudit({
+      tenantId: params.tenantId,
+      actorId: params.auditorId,
+      actorName: params.auditorName,
+      action: 'START_INVENTORY_AUDIT',
+      entity: 'InventoryAudit',
+      entityId: newAudit.id,
+      details: `بدء جلسة تدقيق وجرد مخزون رقم (${auditNumber}) لفرع [${branchName}] تشمل (${items.length}) صنف`,
+    });
+
+    return newAudit;
+  }
+
+  public updateInventoryAudit(
+    tenantId: string,
+    auditId: string,
+    updates: Partial<InventoryAudit>
+  ): InventoryAudit | null {
+    if (!this.data.inventoryAudits) return null;
+    const index = this.data.inventoryAudits.findIndex(
+      (a) => a.tenantId === tenantId && a.id === auditId
+    );
+    if (index === -1) return null;
+
+    const existing = this.data.inventoryAudits[index];
+    const updated: InventoryAudit = {
+      ...existing,
+      ...updates,
+      updatedAt: new Date().toISOString(),
+    };
+
+    if (updates.items) {
+      updated.totalProductsCount = updated.items.length;
+      updated.countedProductsCount = updated.items.filter((i) => i.status !== 'uncounted').length;
+      updated.matchedCount = updated.items.filter((i) => i.status === 'matched').length;
+      updated.deficitCount = updated.items.filter((i) => i.status === 'deficit').length;
+      updated.surplusCount = updated.items.filter((i) => i.status === 'surplus').length;
+      updated.uncountedCount = updated.items.filter((i) => i.status === 'uncounted').length;
+
+      let deficitVal = 0;
+      let surplusVal = 0;
+      let netCost = 0;
+
+      for (const item of updated.items) {
+        if (item.status === 'uncounted') continue;
+        const diff = item.actualQuantity - item.systemQuantity;
+        item.difference = diff;
+        item.differenceCostValue = diff * item.costPrice;
+
+        if (diff === 0) {
+          item.status = 'matched';
+        } else if (diff < 0) {
+          item.status = 'deficit';
+          deficitVal += Math.abs(item.differenceCostValue);
+        } else {
+          item.status = 'surplus';
+          surplusVal += item.differenceCostValue;
+        }
+        netCost += item.differenceCostValue;
+      }
+
+      updated.totalDeficitValueSdg = deficitVal;
+      updated.totalSurplusValueSdg = surplusVal;
+      updated.netDiscrepancyCostSdg = netCost;
+    }
+
+    this.data.inventoryAudits[index] = updated;
+    this.commit();
+    return updated;
+  }
+
+  public reconcileInventoryAudit(params: {
+    tenantId: string;
+    auditId: string;
+    actorName: string;
+    actorId: string;
+  }): { success: boolean; audit?: InventoryAudit; adjustedCount: number; error?: string } {
+    const audit = this.getInventoryAudit(params.tenantId, params.auditId);
+    if (!audit) {
+      return { success: false, adjustedCount: 0, error: 'جلسة الجرد غير موجودة' };
+    }
+    if (audit.reconciled) {
+      return { success: false, adjustedCount: 0, error: 'تمت تسوية هذه الجلسة مسبقاً' };
+    }
+
+    let adjustedCount = 0;
+
+    for (const item of audit.items) {
+      // Reconcile items that were actually counted and have differences
+      if (item.status !== 'uncounted' && item.difference !== 0) {
+        const delta = item.difference;
+        const reason = `تسوية جرد مخزني ذكي (${audit.auditNumber}): ${
+          item.notes ? item.notes : delta < 0 ? 'عجز فعلي مسجل بالجرد' : 'فائض فعلي مسجل بالجرد'
+        }`;
+
+        const adjRes = this.adjustStock({
+          tenantId: params.tenantId,
+          branchId: audit.branchId,
+          productId: item.productId,
+          delta,
+          type: delta < 0 ? 'damage_expired' : 'adjustment',
+          reason,
+          actorName: params.actorName,
+          referenceId: audit.auditNumber,
+        });
+
+        if (adjRes.success) {
+          adjustedCount++;
+        }
+      }
+    }
+
+    audit.reconciled = true;
+    audit.status = 'completed';
+    audit.completedAt = new Date().toISOString();
+    audit.reconciledAt = new Date().toISOString();
+    audit.reconciledBy = params.actorName;
+    audit.updatedAt = new Date().toISOString();
+
+    this.syncInventoryAlerts(params.tenantId);
+    this.commit();
+
+    this.logAudit({
+      tenantId: params.tenantId,
+      actorId: params.actorId,
+      actorName: params.actorName,
+      action: 'RECONCILE_INVENTORY_AUDIT',
+      entity: 'InventoryAudit',
+      entityId: audit.id,
+      details: `اعتماد وتسوية جرد مخزني رقم (${audit.auditNumber}) لفرع [${audit.branchName}]. تم تعديل أرصدة (${adjustedCount}) صنف بصافي فروقات (${audit.netDiscrepancyCostSdg.toLocaleString()} ج.س)`,
+    });
+
+    return { success: true, audit, adjustedCount };
+  }
+
+  public cancelInventoryAudit(
+    tenantId: string,
+    auditId: string
+  ): { success: boolean; error?: string } {
+    const audit = this.getInventoryAudit(tenantId, auditId);
+    if (!audit) {
+      return { success: false, error: 'جلسة الجرد غير موجودة' };
+    }
+    if (audit.reconciled) {
+      return { success: false, error: 'لا يمكن إلغاء جلسة جرد تم اعتمادها وتسويتها في النظام' };
+    }
+
+    audit.status = 'cancelled';
+    audit.updatedAt = new Date().toISOString();
+    this.commit();
+    return { success: true };
   }
 }
 

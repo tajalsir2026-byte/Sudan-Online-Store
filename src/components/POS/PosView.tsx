@@ -42,6 +42,7 @@ import type {
   MultiCurrencyPayment,
   ThermalReceiptSettings,
   PosPrinterSettings,
+  PromotionRule,
 } from '../../types/index.ts';
 import { api } from '../../lib/api.ts';
 import { generateZatcaTlvBase64, generateQrSvg } from '../../lib/zatcaQr.ts';
@@ -61,6 +62,7 @@ interface PosViewProps {
   currencies?: CurrencyConfig[];
   onRefreshShift: () => void;
   onOpenShiftModal: () => void;
+  onOpenKitchen?: () => void;
   isOffline: boolean;
   onSaleCompleted: (sale: Sale, isOffline?: boolean) => void;
 }
@@ -91,6 +93,7 @@ export const PosView: React.FC<PosViewProps> = ({
   currencies = [],
   onRefreshShift,
   onOpenShiftModal,
+  onOpenKitchen,
   isOffline,
   onSaleCompleted,
 }) => {
@@ -102,7 +105,19 @@ export const PosView: React.FC<PosViewProps> = ({
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
   const [isCustomerModalOpen, setIsCustomerModalOpen] = useState(false);
   const [discountTotal, setDiscountTotal] = useState<number>(0);
+  const [promotions, setPromotions] = useState<PromotionRule[]>([]);
   const [barcodeInput, setBarcodeInput] = useState('');
+
+  useEffect(() => {
+    api
+      .getPromotions()
+      .then((res) => {
+        if (res && res.promotions) {
+          setPromotions(res.promotions.filter((p) => p.isActive));
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   // Camera Barcode Scanner Modal
   const [isCameraScannerOpen, setIsCameraScannerOpen] = useState(false);
@@ -434,13 +449,17 @@ export const PosView: React.FC<PosViewProps> = ({
       setForeignCashReceived('');
     } else {
       const found = currencies.find((c) => c.code === code);
-      let defaultRate = 2800;
-      if (code === 'SAR') defaultRate = 745;
-      else if (code === 'AED') defaultRate = 760;
-      else if (code === 'EUR') defaultRate = 3050;
+      let defaultRate = 2750;
+      if (code === 'USD') defaultRate = 2750;
+      else if (code === 'SAR') defaultRate = 733.33;
+      else if (code === 'TRY') defaultRate = 82.5;
+      else if (code === 'EGP') defaultRate = 56.8;
+      else if (code === 'AED') defaultRate = 748.5;
+      else if (code === 'EUR') defaultRate = 2980;
+      else if (code === 'QAR') defaultRate = 755;
       else if (found) defaultRate = found.rateToSdg;
 
-      const activeRate = found?.rateToSdg || defaultRate;
+      const activeRate = found?.rateToSdg && found.rateToSdg > 0 ? found.rateToSdg : defaultRate;
       setCustomExchangeRate(activeRate);
       const foreignTotal = (grandTotal / activeRate).toFixed(2);
       setForeignCashReceived(foreignTotal);
@@ -474,11 +493,74 @@ export const PosView: React.FC<PosViewProps> = ({
     };
   });
 
+  // ==========================================
+  // Automatic Promotions Engine
+  // ==========================================
+  const appliedPromotions: Array<{
+    id: string;
+    title: string;
+    discountSdg: number;
+    description?: string;
+  }> = [];
+
+  for (const promo of promotions) {
+    if (!promo.isActive) continue;
+
+    if (promo.type === 'buy_x_get_y' && promo.buyProductId && promo.buyQuantity && promo.freeQuantity) {
+      const cartItem = cart.find((it) => it.product.id === promo.buyProductId);
+      if (cartItem) {
+        const step = promo.buyQuantity + promo.freeQuantity;
+        let freeSets = Math.floor(cartItem.quantity / step);
+        if (freeSets === 0 && cartItem.quantity >= promo.buyQuantity) {
+          freeSets = Math.floor(cartItem.quantity / promo.buyQuantity);
+        }
+        if (freeSets > 0) {
+          const disc = Math.round(freeSets * promo.freeQuantity * cartItem.unitPrice);
+          if (disc > 0) {
+            appliedPromotions.push({
+              id: promo.id,
+              title: promo.title,
+              discountSdg: disc,
+              description: `عرض اشترِ ${promo.buyQuantity} واحصل على ${promo.freeQuantity} مجاناً`,
+            });
+          }
+        }
+      }
+    } else if (promo.type === 'qty_discount_pct' && promo.productId && promo.minQuantity && promo.discountPct) {
+      const cartItem = cart.find((it) => it.product.id === promo.productId);
+      if (cartItem && cartItem.quantity >= promo.minQuantity) {
+        const itemGross = cartItem.quantity * cartItem.unitPrice;
+        const disc = Math.round(itemGross * (promo.discountPct / 100));
+        if (disc > 0) {
+          appliedPromotions.push({
+            id: promo.id,
+            title: promo.title,
+            discountSdg: disc,
+            description: `خصم كمية ${promo.discountPct}% على «${cartItem.product.name}»`,
+          });
+        }
+      }
+    } else if (promo.type === 'cart_fixed_discount' && promo.minCartTotalSdg && promo.discountAmountSdg) {
+      const currentGross = cart.reduce((acc, it) => acc + it.quantity * it.unitPrice, 0);
+      if (currentGross >= promo.minCartTotalSdg) {
+        appliedPromotions.push({
+          id: promo.id,
+          title: promo.title,
+          discountSdg: promo.discountAmountSdg,
+          description: `خصم مكافأة السلة الكبيرة`,
+        });
+      }
+    }
+  }
+
+  const autoPromoDiscountTotal = appliedPromotions.reduce((acc, p) => acc + p.discountSdg, 0);
+  const totalCombinedDiscount = discountTotal + autoPromoDiscountTotal;
+
   const subtotal = cart.reduce((acc, item) => acc + item.quantity * item.unitPrice - item.discount, 0);
   const taxTotal = Math.round(computedTaxTotal * 100) / 100;
   const grandTotal = isPricesIncludeVat
-    ? Math.max(0, subtotal - discountTotal)
-    : Math.max(0, subtotal - discountTotal + taxTotal);
+    ? Math.max(0, subtotal - totalCombinedDiscount)
+    : Math.max(0, subtotal - totalCombinedDiscount + taxTotal);
 
   // Open Payment modal
   const handleProceedToPayment = () => {
@@ -559,7 +641,7 @@ export const PosView: React.FC<PosViewProps> = ({
       customerName: selectedCustomer ? selectedCustomer.name : customerName,
       customerPhone: selectedCustomer ? selectedCustomer.phone : customerPhone,
       items: saleItems,
-      discountTotalSdg: discountTotal,
+      discountTotalSdg: totalCombinedDiscount,
       taxTotalSdg: taxTotal,
       vatEnabled: isVatActive,
       defaultVatPct,
@@ -727,6 +809,35 @@ export const PosView: React.FC<PosViewProps> = ({
               {soundEnabled ? <Volume2 className="w-3.5 h-3.5 text-emerald-400" /> : <VolumeX className="w-3.5 h-3.5 text-slate-400" />}
               <span className="hidden md:inline">{soundEnabled ? 'صوت' : 'صامت'}</span>
             </button>
+
+            {/* Customers & Loyalty CRM Trigger Button */}
+            <button
+              type="button"
+              onClick={() => setIsCustomerModalOpen(true)}
+              title="دليل العملاء وبرنامج نقاط الولاء (CRM)"
+              className="flex items-center gap-1.5 px-3 py-1 bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 rounded-lg text-xs font-bold border border-amber-500/40 transition-all"
+            >
+              <Users className="w-3.5 h-3.5 text-amber-400" />
+              <span>العملاء والولاء</span>
+              {selectedCustomer && (
+                <span className="bg-amber-500 text-slate-900 px-1.5 py-0.2 rounded-full text-[10px] font-mono font-black">
+                  ⭐ {selectedCustomer.loyaltyPoints || 0}
+                </span>
+              )}
+            </button>
+
+            {/* Quick Kitchen Display System (KDS) Button */}
+            {onOpenKitchen && (
+              <button
+                type="button"
+                onClick={onOpenKitchen}
+                title="الانتقال إلى لوحة شاشة المطبخ (KDS) لمتابعة تحضير الطلبات"
+                className="flex items-center gap-1.5 px-3 py-1 bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 rounded-lg text-xs font-bold border border-emerald-500/40 transition-all"
+              >
+                <UtensilsCrossed className="w-3.5 h-3.5 text-emerald-400" />
+                <span>شاشة المطبخ</span>
+              </button>
+            )}
 
             {/* Quick Simulation Buttons for Demo / Testing */}
             <div className="hidden xl:flex items-center gap-1 bg-slate-800/80 p-0.5 rounded-lg border border-slate-700">
@@ -1082,7 +1193,7 @@ export const PosView: React.FC<PosViewProps> = ({
           <div className="flex items-center justify-between text-xs">
             <span className="flex items-center gap-1 text-slate-600">
               <Percent className="w-3.5 h-3.5 text-amber-600" />
-              <span>الخصم الإجمالي:</span>
+              <span>الخصم اليدوي الإضافي:</span>
             </span>
             <input
               type="number"
@@ -1094,6 +1205,42 @@ export const PosView: React.FC<PosViewProps> = ({
               className="w-24 text-left px-2 py-0.5 text-xs border border-slate-300 rounded bg-white font-mono"
             />
           </div>
+
+          {/* Automatic Promotion Badges if any */}
+          {appliedPromotions.length > 0 && (
+            <div className="space-y-1.5 pt-1.5 border-t border-slate-200">
+              <div className="flex items-center justify-between text-[11px] font-bold text-orange-700">
+                <span className="flex items-center gap-1">
+                  <Sparkles className="w-3.5 h-3.5 text-orange-500 animate-spin" />
+                  <span>عروض ترويجية نشطة مطبقة:</span>
+                </span>
+                <span className="font-mono text-orange-800">
+                  -{autoPromoDiscountTotal.toLocaleString()} ج.س
+                </span>
+              </div>
+              {appliedPromotions.map((p) => (
+                <div
+                  key={p.id}
+                  className="flex items-center justify-between text-[10px] bg-orange-50 border border-orange-200/90 text-orange-900 px-2 py-1 rounded-md"
+                >
+                  <span className="font-semibold truncate max-w-[190px]">{p.title}</span>
+                  <span className="font-mono font-bold text-orange-700">
+                    -{p.discountSdg.toLocaleString()} ج.س
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* VAT breakdown if active */}
+          {isVatActive && (
+            <div className="flex items-center justify-between text-xs text-slate-600">
+              <span>ضريبة القيمة المضافة ({defaultVatPct}%):</span>
+              <span className="font-mono tabular-nums text-slate-700">
+                +{taxTotal.toLocaleString()} ج.س
+              </span>
+            </div>
+          )}
 
           {/* Net Grand Total */}
           <div className="pt-2 border-t border-slate-200 flex items-center justify-between">
@@ -1202,13 +1349,426 @@ export const PosView: React.FC<PosViewProps> = ({
                 </div>
 
                 {/* Currency selector chips */}
-                <div className="grid grid-cols-5 gap-1.5">
+                <div className="grid grid-cols-4 sm:grid-cols-7 gap-1.5">
                   {[
-                    { code: 'SDG', label: 'SDG جنيه' },
-                    { code: 'USD', label: 'USD دولار $' },
-                    { code: 'SAR', label: 'SAR ريال ر.س' },
-                    { code: 'AED', label: 'AED درهم د.إ' },
-                    { code: 'EUR', label: 'EUR يورو €' },
+                    { code: 'SDG', label: 'SDG جنيه', badge: 'أساس' },
+                    { code: 'USD', label: 'USD دولار 
+                    <button
+                      key={cur.code}
+                      type="button"
+                      onClick={() => handleCurrencySelect(cur.code)}
+                      className={`py-1.5 px-1 rounded-lg text-[11px] font-bold transition-all text-center ${
+                        selectedCurrency === cur.code
+                          ? 'bg-emerald-600 text-white shadow-xs'
+                          : 'bg-white text-slate-700 border border-slate-200 hover:bg-slate-100'
+                      }`}
+                    >
+                      {cur.label}
+                    </button>
+                  ))}
+                </div>
+
+                {/* Foreign Currency Calculation Fields */}
+                {selectedCurrency !== 'SDG' && (
+                  <div className="p-3 bg-amber-50/80 border border-amber-200 rounded-lg space-y-2 text-xs">
+                    <div className="grid grid-cols-2 gap-2">
+                      <div>
+                        <label className="block text-[11px] font-semibold text-amber-950 mb-0.5">
+                          سعر الصرف المخصص (ج.س/1 {selectedCurrency}):
+                        </label>
+                        <input
+                          type="number"
+                          min="1"
+                          value={customExchangeRate}
+                          onChange={(e) => {
+                            const rate = Number(e.target.value) || 1;
+                            setCustomExchangeRate(rate);
+                            setForeignCashReceived((grandTotal / rate).toFixed(2));
+                          }}
+                          className="w-full px-2.5 py-1.5 text-xs font-mono font-bold border border-amber-300 rounded bg-white"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-[11px] font-semibold text-amber-950 mb-0.5">
+                          المطلوب بـ ({selectedCurrency}):
+                        </label>
+                        <div className="px-2.5 py-1.5 text-xs font-mono font-bold text-amber-950 bg-amber-100/60 rounded border border-amber-300">
+                          {(grandTotal / customExchangeRate).toFixed(2)} {selectedCurrency}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="pt-2 border-t border-amber-200 grid grid-cols-2 gap-2">
+                      <div>
+                        <label className="block text-[11px] font-semibold text-amber-950 mb-0.5">
+                          المبلغ المستلم ({selectedCurrency}):
+                        </label>
+                        <input
+                          type="number"
+                          step="any"
+                          value={foreignCashReceived}
+                          onChange={(e) => setForeignCashReceived(e.target.value)}
+                          placeholder="المستلم"
+                          className="w-full px-2.5 py-1.5 text-xs font-mono font-bold border border-amber-300 rounded bg-white"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-[11px] font-semibold text-amber-950 mb-0.5">
+                          المتبقي للزبون (الفكة):
+                        </label>
+                        <div className="px-2.5 py-1.5 text-xs font-mono font-bold text-emerald-800 bg-white rounded border border-emerald-200">
+                          {Number(foreignCashReceived) >= grandTotal / customExchangeRate
+                            ? `${(Number(foreignCashReceived) - grandTotal / customExchangeRate).toFixed(2)} ${selectedCurrency} (${Math.round((Number(foreignCashReceived) - grandTotal / customExchangeRate) * customExchangeRate).toLocaleString()} ج.س)`
+                            : '0.00'}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Cash specific inputs (when in SDG) */}
+              {paymentMethod === 'cash' && selectedCurrency === 'SDG' && (
+                <div className="space-y-3 bg-slate-50 p-4 rounded-xl border border-slate-200">
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 mb-1">المبلغ المستلم من الزبون (ج.س):</label>
+                    <input
+                      type="number"
+                      value={cashReceived}
+                      onChange={(e) => setCashReceived(e.target.value)}
+                      className="w-full px-3 py-2 text-base font-bold font-mono border border-slate-300 rounded-lg bg-white"
+                      placeholder="أدخل المبلغ"
+                    />
+                  </div>
+
+                  {Number(cashReceived) >= grandTotal && (
+                    <div className="flex items-center justify-between pt-2 border-t border-slate-200 text-xs">
+                      <span className="font-semibold text-slate-700">المتبقي للزبون (الفكة):</span>
+                      <span className="font-bold font-mono text-emerald-700 text-base">
+                        {(Number(cashReceived) - grandTotal).toLocaleString()} ج.س
+                      </span>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Bankak specific inputs */}
+              {paymentMethod === 'bankak' && (
+                <div className="space-y-3 bg-red-50/50 p-4 rounded-xl border border-red-200 text-xs">
+                  <div className="flex items-center justify-between pb-2 border-b border-red-100">
+                    <span className="font-semibold text-red-900">حساب بنكك للمنشأة:</span>
+                    <span className="font-mono font-bold text-red-800 text-sm">2498765</span>
+                  </div>
+                  <div>
+                    <label className="block font-semibold text-slate-700 mb-1">
+                      رقم المعاملة / إشعار التحويل (Bankak Ref):
+                    </label>
+                    <input
+                      type="text"
+                      value={paymentReference}
+                      onChange={(e) => setPaymentReference(e.target.value)}
+                      placeholder="مثال: BNK-TXN-884920"
+                      className="w-full px-3 py-2 text-xs font-mono border border-slate-300 rounded-lg bg-white"
+                    />
+                  </div>
+                </div>
+              )}
+
+              {/* Offline indicator in modal */}
+              {isOffline && (
+                <div className="p-3 bg-amber-50 rounded-lg border border-amber-200 text-xs text-amber-900 flex items-center gap-2">
+                  <Clock className="w-4 h-4 text-amber-700 shrink-0" />
+                  <span>
+                    أنت تعمل دون اتصال بالإنترنت. سيتم حفظ الفاتورة محلياً وخصم المخزون التقديري، وستُرحل للخادم تلقائياً فور عودة الشبكة.
+                  </span>
+                </div>
+              )}
+            </div>
+
+            {/* Modal Actions */}
+            <div className="px-6 py-4 bg-slate-50 border-t border-slate-200 flex items-center justify-end gap-3">
+              <button
+                type="button"
+                onClick={() => setIsPaymentModalOpen(false)}
+                className="px-4 py-2 text-xs font-semibold text-slate-600 hover:text-slate-900"
+              >
+                إلغاء
+              </button>
+              <button
+                type="button"
+                disabled={isSubmitting}
+                onClick={handleFinalizeSale}
+                className="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white font-bold text-xs rounded-lg shadow-sm transition-colors flex items-center gap-2"
+              >
+                {isSubmitting ? 'جاري الإصدار...' : 'تأكيد وقبض الفاتورة'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* =========================================================================
+          PRINTABLE THERMAL RECEIPT MODAL (Customized Header & Footer & Multi-Currency)
+          ========================================================================= */}
+      {completedSale && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div
+            className={`bg-white rounded-2xl overflow-hidden shadow-2xl flex flex-col border border-slate-300 animate-in fade-in zoom-in-95 duration-150 ${
+              receiptSettings.defaultTemplate === '58mm'
+                ? 'w-full max-w-[320px]'
+                : receiptSettings.defaultTemplate === 'a4'
+                ? 'w-full max-w-md'
+                : 'w-full max-w-sm'
+            }`}
+          >
+            {/* Header actions */}
+            <div className="p-3 bg-slate-900 text-white flex items-center justify-between">
+              <span className="text-xs font-bold">فاتورة مبيعات إلكترونية معتمدة</span>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={handlePrint}
+                  className="px-2.5 py-1 text-xs bg-emerald-600 hover:bg-emerald-700 text-white rounded flex items-center gap-1 font-semibold"
+                >
+                  <Printer className="w-3.5 h-3.5" />
+                  <span>طباعة ({receiptSettings.defaultTemplate})</span>
+                </button>
+                <button
+                  onClick={() => setCompletedSale(null)}
+                  className="text-slate-400 hover:text-white"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+
+            {/* Thermal Receipt Content Container */}
+            <div id="printable-receipt" className="p-4 bg-white text-slate-900 font-sans text-xs space-y-2 select-text">
+              {/* Optional Custom Logo */}
+              {receiptSettings.logoUrl && (
+                <div className="flex justify-center mb-1">
+                  <img
+                    src={receiptSettings.logoUrl}
+                    alt="Logo"
+                    className="max-h-12 object-contain"
+                    onError={(e) => ((e.target as HTMLElement).style.display = 'none')}
+                  />
+                </div>
+              )}
+
+              {/* Receipt Header (Customized in Admin) */}
+              <div className="text-center border-b border-dashed border-slate-400 pb-2">
+                <h2 className="text-sm font-bold tracking-tight">
+                  {receiptSettings.storeName || 'شركة الرواد للتجارة والمحاصيل'}
+                </h2>
+                <p className="text-[11px] text-slate-600">
+                  {receiptSettings.storeSubtitle || completedSale.branchName}
+                </p>
+                {receiptSettings.address && (
+                  <p className="text-[10px] text-slate-500">{receiptSettings.address}</p>
+                )}
+                {receiptSettings.taxNumber && (
+                  <p className="text-[10px] text-slate-500">الرقم الضريبي: {receiptSettings.taxNumber}</p>
+                )}
+                {receiptSettings.phone && (
+                  <p className="text-[10px] text-slate-500 font-mono">هاتف: {receiptSettings.phone}</p>
+                )}
+              </div>
+
+              {/* Receipt Meta */}
+              <div className="text-[10px] text-slate-600 space-y-0.5 border-b border-dashed border-slate-300 pb-2">
+                <div className="flex justify-between">
+                  <span>رقم الفاتورة:</span>
+                  <span className="font-mono font-bold text-slate-900">{completedSale.invoiceNumber}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>التاريخ والوقت:</span>
+                  <span className="font-mono">{new Date(completedSale.createdAt).toLocaleString('ar-SD')}</span>
+                </div>
+                {receiptSettings.showCashierName && (
+                  <div className="flex justify-between">
+                    <span>الكاشير:</span>
+                    <span>{completedSale.cashierName}</span>
+                  </div>
+                )}
+                {receiptSettings.showCustomerInfo && (
+                  <div className="flex justify-between">
+                    <span>العميل:</span>
+                    <span>{completedSale.customerName}</span>
+                  </div>
+                )}
+                {completedSale.isOfflineCreated && (
+                  <div className="text-amber-700 font-bold text-[9px] text-center pt-0.5">
+                    (صدرت دون اتصال بالإنترنت - مسجلة محلياً)
+                  </div>
+                )}
+              </div>
+
+              {/* Items Table with Quick Order Notes */}
+              <div className="border-b border-dashed border-slate-300 pb-2">
+                <table className="w-full text-right text-[11px]">
+                  <thead>
+                    <tr className="border-b border-slate-300 text-[10px] text-slate-500">
+                      <th className="py-1">الصنف</th>
+                      <th className="py-1 text-center">الكمية</th>
+                      <th className="py-1 text-left">الإجمالي</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {completedSale.items.map((it, idx) => (
+                      <React.Fragment key={idx}>
+                        <tr className="py-1">
+                          <td className="py-1 font-medium">{it.productName}</td>
+                          <td className="py-1 text-center font-mono">{it.quantity}</td>
+                          <td className="py-1 text-left font-mono font-bold">{it.totalSdg.toLocaleString()}</td>
+                        </tr>
+                        {/* Display item notes for kitchen/packaging if enabled */}
+                        {receiptSettings.showKitchenNotes && it.notes && (
+                          <tr className="bg-amber-50/60">
+                            <td colSpan={3} className="py-0.5 px-1 text-[9px] text-amber-900 font-semibold">
+                              ↳ ملاحظة (طلب سريع/تغليف): {it.notes}
+                            </td>
+                          </tr>
+                        )}
+                      </React.Fragment>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Totals */}
+              <div className="space-y-1 text-xs border-b border-dashed border-slate-400 pb-2">
+                <div className="flex justify-between text-slate-600">
+                  <span>المجموع الأولي:</span>
+                  <span className="font-mono">{completedSale.subtotalSdg.toLocaleString()} ج.س</span>
+                </div>
+                {completedSale.discountTotalSdg > 0 && (
+                  <div className="flex justify-between text-rose-600">
+                    <span>الخصم الممنوح:</span>
+                    <span className="font-mono">-{completedSale.discountTotalSdg.toLocaleString()} ج.س</span>
+                  </div>
+                )}
+                <div className="flex justify-between font-bold text-sm text-slate-900 pt-1">
+                  <span>المبلغ المستحق:</span>
+                  <span className="font-mono">{completedSale.grandTotalSdg.toLocaleString()} ج.س</span>
+                </div>
+
+                {/* Multi-Currency breakdown on receipt if present */}
+                {completedSale.multiCurrency && (
+                  <div className="p-2 bg-emerald-50 border border-emerald-200 rounded-lg space-y-0.5 text-[10px] text-emerald-950 font-medium my-1">
+                    <div className="flex justify-between font-bold">
+                      <span>السداد بالعملة:</span>
+                      <span className="font-mono">
+                        {completedSale.multiCurrency.totalForeign} {completedSale.multiCurrency.currencySymbol}
+                      </span>
+                    </div>
+                    <div className="flex justify-between text-slate-600 text-[9px]">
+                      <span>سعر الصرف:</span>
+                      <span className="font-mono">
+                        1 {completedSale.multiCurrency.currencyCode} = {completedSale.multiCurrency.exchangeRate.toLocaleString()} ج.س
+                      </span>
+                    </div>
+                    {completedSale.multiCurrency.amountReceivedForeign && (
+                      <div className="flex justify-between text-slate-600 text-[9px]">
+                        <span>المستلم:</span>
+                        <span className="font-mono">
+                          {completedSale.multiCurrency.amountReceivedForeign} {completedSale.multiCurrency.currencySymbol}
+                        </span>
+                      </div>
+                    )}
+                    {Boolean(completedSale.multiCurrency.changeForeign) && (
+                      <div className="flex justify-between text-emerald-800 font-bold text-[9px]">
+                        <span>المتبقي للزبون (الفكة):</span>
+                        <span className="font-mono">
+                          {completedSale.multiCurrency.changeForeign} {completedSale.multiCurrency.currencySymbol} ({completedSale.multiCurrency.changeSdg?.toLocaleString()} ج.س)
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                <div className="flex justify-between text-[11px] text-slate-600">
+                  <span>طريقة السداد:</span>
+                  <span className="font-medium">
+                    {completedSale.paymentMethod === 'cash'
+                      ? 'نقداً'
+                      : completedSale.paymentMethod === 'bankak'
+                      ? `بنكك (${completedSale.paymentReference || 'معتمد'})`
+                      : completedSale.paymentMethod}
+                  </span>
+                </div>
+              </div>
+
+              {/* ZATCA / TLV Base64 QR Code */}
+              {receiptSettings.showQrCode && (
+                <div className="flex flex-col items-center justify-center pt-2 pb-1">
+                  <div
+                    className="w-24 h-24"
+                    dangerouslySetInnerHTML={{
+                      __html: generateQrSvg(
+                        generateZatcaTlvBase64({
+                          sellerName: receiptSettings.storeName || 'شركة الرواد للتجارة والمحاصيل',
+                          taxNumber: receiptSettings.taxNumber || '1004892348',
+                          timestamp: completedSale.createdAt,
+                          totalWithVat: completedSale.grandTotalSdg.toString(),
+                          vatTotal: '0',
+                        }),
+                        96
+                      ),
+                    }}
+                  />
+                  <span className="text-[9px] text-slate-400 mt-1 font-mono">رمز الفاتورة الإلكترونية المعتمدة</span>
+                </div>
+              )}
+
+              {/* Receipt Footer (Customized in Admin) */}
+              <div className="text-center text-[10px] text-slate-500 pt-1 border-t border-dashed border-slate-300 space-y-0.5">
+                <p>{receiptSettings.footerMessage || 'شكراً لزيارتكم! البضاعة المباعة ترد وتستبدل خلال 3 أيام'}</p>
+                {receiptSettings.secondaryFooter && (
+                  <p className="font-mono text-[9px] text-slate-400">{receiptSettings.secondaryFooter}</p>
+                )}
+              </div>
+            </div>
+
+            {/* Modal Bottom Actions */}
+            <div className="p-3 bg-slate-50 border-t border-slate-200 flex justify-end">
+              <button
+                onClick={() => setCompletedSale(null)}
+                className="w-full py-2 bg-slate-900 text-white rounded-lg text-xs font-semibold hover:bg-slate-800"
+              >
+                فاتورة جديدة
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Camera Barcode Scanner Modal */}
+      <CameraBarcodeScanner
+        isOpen={isCameraScannerOpen}
+        onClose={() => setIsCameraScannerOpen(false)}
+        onScanSuccess={(code) => processBarcodeScan(code, 'hardware_scanner')}
+        soundEnabled={soundEnabled}
+      />
+
+      {/* POS Default Printer Settings Modal */}
+      <PosPrinterModal
+        isOpen={isPrinterModalOpen}
+        onClose={() => {
+          setIsPrinterModalOpen(false);
+          setPrinterSettings(getPosPrinterSettings());
+        }}
+      />
+    </div>
+  );
+};
+, badge: '2,750' },
+                    { code: 'SAR', label: 'SAR ريال ر.س', badge: '733' },
+                    { code: 'TRY', label: 'TRY ليرة ₺', badge: '82.5' },
+                    { code: 'EGP', label: 'EGP مصري ج.م', badge: '56.8' },
+                    { code: 'AED', label: 'AED درهم د.إ', badge: '748' },
+                    { code: 'EUR', label: 'EUR يورو €', badge: '2,980' },
                   ].map((cur) => (
                     <button
                       key={cur.code}
