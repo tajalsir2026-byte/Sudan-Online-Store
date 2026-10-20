@@ -2,8 +2,8 @@
   "name": "إدارة السند",
   "short_name": "إدارة السند",
   "description": "لوحة إدارة المنصة المركزية لمنصة سند",
-  "start_url": "/admin",
-  "scope": "/admin",
+  "start_url": "/#/admin",
+  "scope": "/#/admin",
   "display": "standalone",
   "orientation": "portrait",
   "theme_color": "#5B21B6",
@@ -12,7 +12,7 @@
   "dir": "rtl",
   "icons": [
     {
-      "src": "data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='110' fill='%235B21B6'/%3E%3Cpath d='M256 80L360 130L360 250C360 340 310 400 256 430C202 400 152 340 152 250L152 130Z' fill='white' opacity='0.95'/%3E%3Cpath d='M256 160L280 210L336 210L292 242L312 292L256 260L200 292L220 242L176 210L232 210Z' fill='%235B21B6'/%3E%3Ctext x='256' y='470' font-family='Arial' font-size='48' font-weight='bold' fill='white' text-anchor='middle'%E5%93%81%E7%AE%A1%E7%90%86%3C/text%3E%3C/svg%3E",
+      "src": "data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='110' fill='%235B21B6'/%3E%3Ctext x='256' y='320' font-size='240' text-anchor='middle'%3E%F0%9F%9B%A1%EF%B8%8F%3C/text%3E%3C/svg%3E",
       "sizes": "512x512",
       "type": "image/svg+xml",
       "purpose": "any maskable"

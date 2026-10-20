@@ -2,8 +2,8 @@
   "name": "سند",
   "short_name": "سند",
   "description": "تطبيق الجمهور للتسوق والطلبات",
-  "start_url": "/client",
-  "scope": "/client",
+  "start_url": "/#/client",
+  "scope": "/#/client",
   "display": "standalone",
   "orientation": "portrait",
   "theme_color": "#D97706",
@@ -12,7 +12,7 @@
   "dir": "rtl",
   "icons": [
     {
-      "src": "data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='110' fill='%23D97706'/%3E%3Crect x='80' y='210' width='352' height='240' rx='25' fill='white' opacity='0.95'/%3E%3Cpath d='M170 210Q170 100 256 100Q342 100 342 210' fill='none' stroke='white' stroke-width='25' stroke-linecap='round' opacity='0.95'/%3E%3C/svg%3E",
+      "src": "data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='110' fill='%23D97706'/%3E%3Ctext x='256' y='320' font-size='240' text-anchor='middle'%3E%F0%9F%9B%8D%EF%B8%8F%3C/text%3E%3C/svg%3E",
       "sizes": "512x512",
       "type": "image/svg+xml",
       "purpose": "any maskable"
