@@ -73,15 +73,15 @@ export const SplashScreen: React.FC<SplashScreenProps> = ({ appType }) => {
 
       {/* المحتوى الرئيسي */}
       <div className="relative z-10 text-center px-8">
-        {/* الشعار - الأيقونة الأصلية */}
+        {/* الشعار - الأيقونة الأصلية الملونة */}
         <div className={`mb-6 ${logoLoaded ? 'animate-splash-logo' : 'opacity-0'}`}>
           <div className="relative inline-block">
             {/* هالة خلف الشعار */}
             <div className={`absolute inset-0 ${config.accentColor} rounded-full blur-3xl opacity-40 scale-150`}></div>
             <img
-              src="/assets/originals/sanad-icon.png"
+              src={`/assets/originals/${appType}-icon-512.png`}
               alt="Sanad Logo"
-              className="relative w-36 h-36 drop-shadow-2xl"
+              className="relative w-36 h-36 drop-shadow-2xl rounded-3xl"
               style={{ imageRendering: 'auto' }}
             />
           </div>

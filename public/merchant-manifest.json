@@ -1,7 +1,7 @@
 {
   "name": "تاجر السند - نقطة البيع والمخزون",
   "short_name": "تاجر السند",
-  "description": "تطبيق التاجر لنقاط البيع وإدارة المخزون والورديات والتقارير",
+  "description": "تطبيق التاجر لنقاط البيع وإدارة المخزون",
   "start_url": "/#/merchant",
   "scope": "/",
   "display": "standalone",
@@ -12,18 +12,16 @@
   "dir": "rtl",
   "icons": [
     {
-      "src": "/assets/originals/sanad-icon.png",
+      "src": "/assets/originals/merchant-icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
-      "purpose": "any maskable"
-    }
-  ],
-  "screenshots": [
+      "purpose": "any"
+    },
     {
-      "src": "/screenshots/merchant-1.jpg",
-      "sizes": "1280x720",
-      "type": "image/jpeg",
-      "form_factor": "wide"
+      "src": "/assets/originals/merchant-icon-1024.png",
+      "sizes": "1024x1024",
+      "type": "image/png",
+      "purpose": "any"
     }
   ],
   "categories": ["business", "finance"],
@@ -31,7 +29,7 @@
     {
       "name": "نقطة البيع",
       "url": "/#/merchant",
-      "icons": [{"src": "/icons/merchant-192.png", "sizes": "192x192"}]
+      "icons": [{"src": "/assets/originals/merchant-icon-512.png", "sizes": "512x512"}]
     }
   ]
 }
