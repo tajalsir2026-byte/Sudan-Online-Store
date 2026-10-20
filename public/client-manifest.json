@@ -1,6 +1,6 @@
 {
-  "name": "سند - تسوق وطلبات",
-  "short_name": "سند",
+  "name": "السند - تسوق وطلبات",
+  "short_name": "السند",
   "description": "تطبيق الجمهور للتسوق والطلبات",
   "start_url": "/#/client",
   "scope": "/",
@@ -12,24 +12,17 @@
   "dir": "rtl",
   "icons": [
     {
-      "src": "/assets/originals/client-icon-512.png",
+      "src": "/assets/originals/sanad-icon.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "/assets/originals/client-icon-1024.png",
+      "src": "/assets/originals/sanad-icon-1024.png",
       "sizes": "1024x1024",
       "type": "image/png",
       "purpose": "any"
     }
   ],
-  "categories": ["shopping", "lifestyle"],
-  "shortcuts": [
-    {
-      "name": "تسوق",
-      "url": "/#/client",
-      "icons": [{"src": "/assets/originals/client-icon-512.png", "sizes": "512x512"}]
-    }
-  ]
+  "categories": ["shopping", "lifestyle"]
 }

@@ -12,24 +12,17 @@
   "dir": "rtl",
   "icons": [
     {
-      "src": "/assets/originals/admin-icon-512.png",
+      "src": "/assets/originals/sanad-icon.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "/assets/originals/admin-icon-1024.png",
+      "src": "/assets/originals/sanad-icon-1024.png",
       "sizes": "1024x1024",
       "type": "image/png",
       "purpose": "any"
     }
   ],
-  "categories": ["business", "productivity"],
-  "shortcuts": [
-    {
-      "name": "نظرة عامة",
-      "url": "/#/admin",
-      "icons": [{"src": "/assets/originals/admin-icon-512.png", "sizes": "512x512"}]
-    }
-  ]
+  "categories": ["business", "productivity"]
 }

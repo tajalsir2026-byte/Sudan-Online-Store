@@ -18,7 +18,7 @@ const APP_CONFIG = {
     accentColor: 'bg-emerald-400',
   },
   client: {
-    name: 'سند',
+    name: 'السند',
     subtitle: 'SANAD POS & COMMERCE',
     bgGradient: 'from-[#D97706] via-[#F59E0B] to-[#FBBF24]',
     accentColor: 'bg-amber-400',
@@ -73,21 +73,21 @@ export const SplashScreen: React.FC<SplashScreenProps> = ({ appType }) => {
 
       {/* المحتوى الرئيسي */}
       <div className="relative z-10 text-center px-8">
-        {/* الشعار - الأيقونة الأصلية الملونة */}
+        {/* الشعار - نفس الأيقونة الأصلية لكل التطبيقات */}
         <div className={`mb-6 ${logoLoaded ? 'animate-splash-logo' : 'opacity-0'}`}>
           <div className="relative inline-block">
             {/* هالة خلف الشعار */}
             <div className={`absolute inset-0 ${config.accentColor} rounded-full blur-3xl opacity-40 scale-150`}></div>
             <img
-              src={`/assets/originals/${appType}-icon-512.png`}
+              src="/assets/originals/sanad-icon.png"
               alt="Sanad Logo"
-              className="relative w-36 h-36 drop-shadow-2xl rounded-3xl"
+              className="relative w-36 h-36 drop-shadow-2xl"
               style={{ imageRendering: 'auto' }}
             />
           </div>
         </div>
 
-        {/* اسم التطبيق */}
+        {/* اسم التطبيق - نص مختلف لكل تطبيق */}
         <div className={`transition-all duration-700 delay-300 ${logoLoaded ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
           <h1 className="text-5xl font-black text-white mb-2 drop-shadow-lg" style={{ fontFamily: 'Cairo, sans-serif' }}>
             {config.name}
