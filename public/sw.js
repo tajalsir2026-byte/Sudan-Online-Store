@@ -10,12 +10,9 @@ const staticAssets = [
   '/admin-manifest.json',
   '/merchant-manifest.json',
   '/client-manifest.json',
-  '/icons/admin-192.png',
-  '/icons/admin-512.png',
-  '/icons/merchant-192.png',
-  '/icons/merchant-512.png',
-  '/icons/client-192.png',
-  '/icons/client-512.png',
+  '/assets/originals/sanad-icon-192.png',
+  '/assets/originals/sanad-icon-512.png',
+  '/assets/originals/sanad-icon-1024.png',
 ];
 
 // Install event - cache static assets

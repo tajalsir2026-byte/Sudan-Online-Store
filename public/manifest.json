@@ -1,7 +1,7 @@
 {
-  "name": "منصة سند - الصفحة الرئيسية",
+  "name": "منصة سند - SANAD POS & COMMERCE",
   "short_name": "سند",
-  "description": "المنصة السحابية الشاملة للتجارة ونقاط البيع في السودان - اختر تطبيقك",
+  "description": "المنصة السحابية الشاملة للتجارة ونقاط البيع في السودان",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
@@ -12,11 +12,23 @@
   "dir": "rtl",
   "icons": [
     {
-      "src": "data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='110' fill='%23059669'/%3E%3Ctext x='256' y='300' font-family='Arial' font-size='200' fill='white' text-anchor='middle'%E5%93%81%E7%89%8C%3C/text%3E%3C/svg%3E",
+      "src": "/assets/originals/sanad-icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/assets/originals/sanad-icon-512.png",
       "sizes": "512x512",
-      "type": "image/svg+xml",
-      "purpose": "any maskable"
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/assets/originals/sanad-icon-1024.png",
+      "sizes": "1024x1024",
+      "type": "image/png",
+      "purpose": "any"
     }
   ],
-  "categories": ["business"]
+  "categories": ["business", "shopping", "finance"]
 }
