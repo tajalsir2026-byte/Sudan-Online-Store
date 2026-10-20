@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>تطبيقات منصة سند</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  font-family: 'Segoe UI', Tahoma, Arial, sans-serif;
+  background: #0f172a;
+  min-height: 100vh;
+  padding: 20px;
+  color: #1e293b;
+}
+.container { max-width: 960px; margin: 0 auto; }
+.header {
+  text-align: center;
+  color: white;
+  padding: 40px 20px;
+  margin-bottom: 30px;
+}
+.header h1 {
+  font-size: 2.4em;
+  margin-bottom: 12px;
+}
+.header p {
+  font-size: 1.1em;
+  opacity: 0.85;
+}
+.apps {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 24px;
+  margin-bottom: 40px;
+}
+.app {
+  border-radius: 24px;
+  overflow: hidden;
+  box-shadow: 0 20px 50px rgba(0,0,0,0.4);
+  background: white;
+}
+.app-header {
+  padding: 30px;
+  text-align: center;
+  color: white;
+}
+.app.admin .app-header { background: linear-gradient(135deg, #5B21B6, #7C3AED); }
+.app.merchant .app-header { background: linear-gradient(135deg, #059669, #10B981); }
+.app.client .app-header { background: linear-gradient(135deg, #D97706, #F59E0B); }
+.app-icon {
+  width: 90px;
+  height: 90px;
+  border-radius: 22px;
+  margin: 0 auto 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 44px;
+  background: rgba(255,255,255,0.2);
+  backdrop-filter: blur(10px);
+}
+.app-header h2 {
+  font-size: 1.7em;
+  margin-bottom: 6px;
+}
+.app-header p {
+  font-size: 0.95em;
+  opacity: 0.9;
+}
+.app-body { padding: 24px; }
+.url-box {
+  background: #f1f5f9;
+  border-radius: 12px;
+  padding: 14px;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  overflow: hidden;
+}
+.url-box code {
+  flex: 1;
+  font-size: 0.85em;
+  color: #475569;
+  word-break: break-all;
+  direction: ltr;
+  text-align: left;
+}
+.copy-btn {
+  background: #334155;
+  color: white;
+  border: none;
+  padding: 8px 14px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.85em;
+  white-space: nowrap;
+}
+.copy-btn:hover { background: #1e293b; }
+.btn {
+  display: block;
+  width: 100%;
+  padding: 14px;
+  border-radius: 14px;
+  text-align: center;
+  text-decoration: none;
+  font-weight: bold;
+  font-size: 1em;
+  margin-bottom: 10px;
+  transition: all 0.2s;
+  border: none;
+  cursor: pointer;
+}
+.btn-primary {
+  background: linear-gradient(135deg, #3b82f6, #2563eb);
+  color: white;
+}
+.btn-primary:hover { transform: translateY(-2px); box-shadow: 0 10px 20px rgba(59,130,246,0.3); }
+.btn-secondary {
+  background: #f1f5f9;
+  color: #334155;
+}
+.btn-secondary:hover { background: #e2e8f0; }
+.footer {
+  text-align: center;
+  color: #94a3b8;
+  padding: 20px;
+  font-size: 0.9em;
+}
+.note {
+  background: #1e293b;
+  border-radius: 16px;
+  padding: 20px;
+  margin-bottom: 24px;
+  color: #e2e8f0;
+  border-right: 4px solid #3b82f6;
+}
+.note h3 { color: #60a5fa; margin-bottom: 10px; font-size: 1.1em; }
+.note ol { padding-right: 20px; line-height: 1.8; }
+.note a { color: #60a5fa; text-decoration: none; }
+.note a:hover { text-decoration: underline; }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <div class="header">
+    <h1>📱 تطبيقات منصة سند</h1>
+    <p>3 تطبيقات منفصلة — روابط مباشرة + ملفات APK جاهزة للتوزيع</p>
+  </div>
+
+  <!-- Note -->
+  <div class="note">
+    <h3> كيف تحصل على APK لكل تطبيق؟</h3>
+    <ol>
+      <li>اضغط زر <strong>"📦 تحميل APK"</strong> — سيفتح PWABuilder (خدمة Microsoft مجانية)</li>
+      <li>انتظر 30 ثانية حتى يجهّز الحزمة</li>
+      <li>اضغط <strong>"Download APK"</strong> — سيتم تحميل ملف APK جاهز على هاتفك</li>
+      <li>انقل الملف للناس وافتحه على أي أندرويد — سيُثبّت فوراً</li>
+    </ol>
+  </div>
+
+  <div class="apps">
+
+    <!-- ADMIN APP -->
+    <div class="app admin">
+      <div class="app-header">
+        <div class="app-icon">🛡️</div>
+        <h2>إدارة السند</h2>
+        <p>Super Admin Dashboard</p>
+      </div>
+      <div class="app-body">
+        <div class="url-box">
+          <code>https://sudan-online-store.vercel.app/admin</code>
+          <button class="copy-btn" onclick="copyUrl('https://sudan-online-store.vercel.app/admin',this)">نسخ</button>
+        </div>
+        <a href="https://www.pwabuilder.com/?url=https%3A%2F%2Fsudan-online-store.vercel.app%2Fadmin" target="_blank" class="btn btn-primary">
+          📦 تحميل APK
+        </a>
+        <a href="https://sudan-online-store.vercel.app/admin" target="_blank" class="btn btn-secondary">
+           فتح التطبيق مباشرة
+        </a>
+      </div>
+    </div>
+
+    <!-- MERCHANT APP -->
+    <div class="app merchant">
+      <div class="app-header">
+        <div class="app-icon">🏪</div>
+        <h2>تاجر السند</h2>
+        <p>نقطة البيع والمخزون</p>
+      </div>
+      <div class="app-body">
+        <div class="url-box">
+          <code>https://sudan-online-store.vercel.app/merchant</code>
+          <button class="copy-btn" onclick="copyUrl('https://sudan-online-store.vercel.app/merchant',this)">نسخ</button>
+        </div>
+        <a href="https://www.pwabuilder.com/?url=https%3A%2F%2Fsudan-online-store.vercel.app%2Fmerchant" target="_blank" class="btn btn-primary">
+          📦 تحميل APK
+        </a>
+        <a href="https://sudan-online-store.vercel.app/merchant" target="_blank" class="btn btn-secondary">
+          🌐 فتح التطبيق مباشرة
+        </a>
+      </div>
+    </div>
+
+    <!-- CLIENT APP -->
+    <div class="app client">
+      <div class="app-header">
+        <div class="app-icon">️</div>
+        <h2>سند</h2>
+        <p>تطبيق الجمهور</p>
+      </div>
+      <div class="app-body">
+        <div class="url-box">
+          <code>https://sudan-online-store.vercel.app/client</code>
+          <button class="copy-btn" onclick="copyUrl('https://sudan-online-store.vercel.app/client',this)">نسخ</button>
+        </div>
+        <a href="https://www.pwabuilder.com/?url=https%3A%2F%2Fsudan-online-store.vercel.app%2Fclient" target="_blank" class="btn btn-primary">
+           تحميل APK
+        </a>
+        <a href="https://sudan-online-store.vercel.app/client" target="_blank" class="btn btn-secondary">
+          🌐 فتح التطبيق مباشرة
+        </a>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="footer">
+    <p><strong>منصة سند — SANAD POS & COMMERCE</strong></p>
+    <p>20 أكتوبر 2026</p>
+  </div>
+
+</div>
+
+<script>
+function copyUrl(url, btn) {
+  navigator.clipboard.writeText(url).then(() => {
+    const orig = btn.textContent;
+    btn.textContent = '✅ تم!';
+    setTimeout(() => btn.textContent = orig, 1500);
+  }).catch(() => {
+    prompt('انسخ الرابط:', url);
+  });
+}
+</script>
+</body>
+</html>
