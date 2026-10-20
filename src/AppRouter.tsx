@@ -1,6 +1,7 @@
-import React from 'react';
-import { Routes, Route, Navigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { ErrorBoundary } from './components/Common/ErrorBoundary.tsx';
+import { SplashScreen } from './components/Common/SplashScreen.tsx';
 
 // Lazy imports for code splitting
 const AdminApp = React.lazy(() => import('./AdminApp.tsx'));
@@ -27,36 +28,66 @@ const LoadingFallback = () => (
 );
 
 /**
+ * App wrapper with Splash Screen
+ */
+function AppWithSplash({ children }: { children: React.ReactNode }) {
+  const location = useLocation();
+  const [appType, setAppType] = useState<'admin' | 'merchant' | 'client' | null>(null);
+
+  useEffect(() => {
+    const hash = location.hash;
+    if (hash.includes('#/admin')) {
+      setAppType('admin');
+    } else if (hash.includes('#/merchant')) {
+      setAppType('merchant');
+    } else if (hash.includes('#/client')) {
+      setAppType('client');
+    } else {
+      setAppType(null);
+    }
+  }, [location.hash]);
+
+  return (
+    <>
+      {appType && <SplashScreen appType={appType} />}
+      {children}
+    </>
+  );
+}
+
+/**
  * Root Router — separates the three apps:
- *   /admin      → Super Admin (منصة إدارة السند)
- *   /merchant   → Merchant POS (تاجر السند)
- *   /client     → Public Client (تطبيق الجمهور)
- *   /           → Landing page
- *   /login      → Login page
+ *   /#/admin      → Super Admin (منصة إدارة السند)
+ *   /#/merchant   → Merchant POS (تاجر السند)
+ *   /#/client     → Public Client (تطبيق الجمهور)
+ *   /             → Landing page
+ *   /#/login      → Login page
  */
 export const AppRouter: React.FC = () => {
   return (
     <ErrorBoundary>
       <React.Suspense fallback={<LoadingFallback />}>
-        <Routes>
-          {/* Landing Page — app selector */}
-          <Route path="/" element={<LandingPage />} />
-          <Route path="/login" element={<LoginPage />} />
+        <AppWithSplash>
+          <Routes>
+            {/* Landing Page — app selector */}
+            <Route path="/" element={<LandingPage />} />
+            <Route path="/#/login" element={<LoginPage />} />
 
-          {/* Super Admin — منصة إدارة السند */}
-          <Route path="/admin/*" element={<AdminApp />} />
+            {/* Super Admin — منصة إدارة السند */}
+            <Route path="/#/admin/*" element={<AdminApp />} />
 
-          {/* Merchant — تطبيق التاجر (POS) */}
-          <Route path="/merchant/*" element={<MerchantApp />} />
-          <Route path="/m/:tenantSlug" element={<MerchantApp />} />
+            {/* Merchant — تطبيق التاجر (POS) */}
+            <Route path="/#/merchant/*" element={<MerchantApp />} />
+            <Route path="/#/m/:tenantSlug" element={<MerchantApp />} />
 
-          {/* Client — تطبيق الجمهور */}
-          <Route path="/client/*" element={<ClientApp />} />
-          <Route path="/c/:tenantSlug" element={<ClientApp />} />
+            {/* Client — تطبيق الجمهور */}
+            <Route path="/#/client/*" element={<ClientApp />} />
+            <Route path="/#/c/:tenantSlug" element={<ClientApp />} />
 
-          {/* Fallback */}
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
+            {/* Fallback */}
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </AppWithSplash>
       </React.Suspense>
     </ErrorBoundary>
   );

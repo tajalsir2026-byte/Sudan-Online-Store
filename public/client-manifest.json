@@ -12,13 +12,7 @@
   "dir": "rtl",
   "icons": [
     {
-      "src": "/icons/client-192.png",
-      "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "any maskable"
-    },
-    {
-      "src": "/icons/client-512.png",
+      "src": "/assets/originals/sanad-icon.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"
