@@ -1,0 +1,615 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>منصة السند - Marketplace سوداني متكامل</title>
+    <meta name="description" content="منصة السند - أول marketplace سوداني متكامل يجمع بين الإدارة والتجارة والتسوق في مكان واحد" />
+    <meta name="theme-color" content="#052e1a" />
+    
+    <!-- Open Graph -->
+    <meta property="og:title" content="منصة السند - Marketplace سوداني" />
+    <meta property="og:description" content="أول marketplace سوداني متكامل يجمع بين الإدارة والتجارة والتسوق" />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://sudan-online-store.vercel.app/landing.html" />
+    <meta property="og:image" content="https://sudan-online-store.vercel.app/assets/originals/sanad-icon-1024.png" />
+    
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica', 'Arial', sans-serif;
+        background: #ffffff;
+        color: #1f2937;
+        line-height: 1.6;
+        overflow-x: hidden;
+      }
+      
+      /* Header */
+      header {
+        background: linear-gradient(135deg, #052e1a 0%, #065f46 100%);
+        color: white;
+        padding: 1rem 0;
+        position: sticky;
+        top: 0;
+        z-index: 100;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      }
+      
+      .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 0 2rem;
+      }
+      
+      nav {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+      
+      .logo {
+        font-size: 1.5rem;
+        font-weight: bold;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+      }
+      
+      .nav-links {
+        display: flex;
+        gap: 2rem;
+        list-style: none;
+      }
+      
+      .nav-links a {
+        color: white;
+        text-decoration: none;
+        font-weight: 500;
+        transition: opacity 0.3s;
+      }
+      
+      .nav-links a:hover {
+        opacity: 0.8;
+      }
+      
+      .btn {
+        padding: 0.75rem 1.5rem;
+        border-radius: 0.5rem;
+        text-decoration: none;
+        font-weight: 600;
+        transition: all 0.3s;
+        display: inline-block;
+        cursor: pointer;
+        border: none;
+        font-size: 1rem;
+      }
+      
+      .btn-primary {
+        background: #f97316;
+        color: white;
+      }
+      
+      .btn-primary:hover {
+        background: #ea580c;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(249, 115, 22, 0.3);
+      }
+      
+      .btn-outline {
+        background: transparent;
+        color: white;
+        border: 2px solid white;
+      }
+      
+      .btn-outline:hover {
+        background: white;
+        color: #052e1a;
+      }
+      
+      /* Hero Section */
+      .hero {
+        background: linear-gradient(135deg, #052e1a 0%, #065f46 100%);
+        color: white;
+        padding: 6rem 0 4rem;
+        position: relative;
+        overflow: hidden;
+      }
+      
+      .hero::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        right: -20%;
+        width: 600px;
+        height: 600px;
+        background: radial-gradient(circle, rgba(249,115,22,0.1) 0%, transparent 70%);
+        border-radius: 50%;
+      }
+      
+      .hero-content {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 4rem;
+        align-items: center;
+        position: relative;
+        z-index: 1;
+      }
+      
+      .hero-text h1 {
+        font-size: 3.5rem;
+        font-weight: 800;
+        margin-bottom: 1.5rem;
+        line-height: 1.2;
+      }
+      
+      .hero-text h1 span {
+        color: #f97316;
+      }
+      
+      .hero-text p {
+        font-size: 1.25rem;
+        margin-bottom: 2rem;
+        opacity: 0.9;
+      }
+      
+      .hero-buttons {
+        display: flex;
+        gap: 1rem;
+        flex-wrap: wrap;
+      }
+      
+      .hero-image {
+        text-align: center;
+      }
+      
+      .hero-image img {
+        max-width: 100%;
+        height: auto;
+        border-radius: 1rem;
+        box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+      }
+      
+      /* Features Section */
+      .features {
+        padding: 5rem 0;
+        background: #f9fafb;
+      }
+      
+      .section-title {
+        text-align: center;
+        font-size: 2.5rem;
+        font-weight: 700;
+        margin-bottom: 1rem;
+        color: #052e1a;
+      }
+      
+      .section-subtitle {
+        text-align: center;
+        font-size: 1.125rem;
+        color: #6b7280;
+        margin-bottom: 3rem;
+      }
+      
+      .features-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 2rem;
+      }
+      
+      .feature-card {
+        background: white;
+        padding: 2rem;
+        border-radius: 1rem;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+        transition: transform 0.3s, box-shadow 0.3s;
+      }
+      
+      .feature-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+      }
+      
+      .feature-icon {
+        width: 64px;
+        height: 64px;
+        background: linear-gradient(135deg, #052e1a 0%, #065f46 100%);
+        border-radius: 1rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 1.5rem;
+        font-size: 2rem;
+      }
+      
+      .feature-card h3 {
+        font-size: 1.5rem;
+        margin-bottom: 0.75rem;
+        color: #052e1a;
+      }
+      
+      .feature-card p {
+        color: #6b7280;
+        line-height: 1.7;
+      }
+      
+      /* Apps Section */
+      .apps {
+        padding: 5rem 0;
+        background: white;
+      }
+      
+      .apps-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+        gap: 2rem;
+        margin-top: 3rem;
+      }
+      
+      .app-card {
+        background: white;
+        border: 2px solid #e5e7eb;
+        border-radius: 1rem;
+        padding: 2rem;
+        text-align: center;
+        transition: all 0.3s;
+      }
+      
+      .app-card:hover {
+        border-color: #052e1a;
+        transform: translateY(-5px);
+        box-shadow: 0 10px 30px rgba(5, 46, 26, 0.1);
+      }
+      
+      .app-icon {
+        width: 120px;
+        height: 120px;
+        margin: 0 auto 1.5rem;
+        background: linear-gradient(135deg, #052e1a 0%, #065f46 100%);
+        border-radius: 1.5rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 3rem;
+        color: white;
+        box-shadow: 0 8px 20px rgba(5, 46, 26, 0.2);
+      }
+      
+      .app-card h3 {
+        font-size: 1.5rem;
+        margin-bottom: 0.75rem;
+        color: #052e1a;
+      }
+      
+      .app-card p {
+        color: #6b7280;
+        margin-bottom: 1.5rem;
+        line-height: 1.7;
+      }
+      
+      .app-btn {
+        display: inline-block;
+        padding: 0.75rem 2rem;
+        border-radius: 0.5rem;
+        text-decoration: none;
+        font-weight: 600;
+        transition: all 0.3s;
+      }
+      
+      .app-btn-admin {
+        background: #5B21B6;
+        color: white;
+      }
+      
+      .app-btn-admin:hover {
+        background: #4c1d95;
+      }
+      
+      .app-btn-merchant {
+        background: #059669;
+        color: white;
+      }
+      
+      .app-btn-merchant:hover {
+        background: #047857;
+      }
+      
+      .app-btn-client {
+        background: #D97706;
+        color: white;
+      }
+      
+      .app-btn-client:hover {
+        background: #B45309;
+      }
+      
+      /* How it Works */
+      .how-it-works {
+        padding: 5rem 0;
+        background: #f9fafb;
+      }
+      
+      .steps-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 2rem;
+        margin-top: 3rem;
+      }
+      
+      .step-card {
+        text-align: center;
+        padding: 2rem;
+      }
+      
+      .step-number {
+        width: 60px;
+        height: 60px;
+        background: linear-gradient(135deg, #052e1a 0%, #065f46 100%);
+        color: white;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        font-weight: bold;
+        margin: 0 auto 1.5rem;
+      }
+      
+      .step-card h3 {
+        font-size: 1.25rem;
+        margin-bottom: 0.75rem;
+        color: #052e1a;
+      }
+      
+      .step-card p {
+        color: #6b7280;
+      }
+      
+      /* Footer */
+      footer {
+        background: #052e1a;
+        color: white;
+        padding: 3rem 0 1.5rem;
+      }
+      
+      .footer-content {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 2rem;
+        margin-bottom: 2rem;
+      }
+      
+      .footer-section h4 {
+        font-size: 1.125rem;
+        margin-bottom: 1rem;
+      }
+      
+      .footer-section p,
+      .footer-section a {
+        color: rgba(255,255,255,0.8);
+        text-decoration: none;
+        line-height: 1.8;
+      }
+      
+      .footer-section a:hover {
+        color: #f97316;
+      }
+      
+      .footer-bottom {
+        text-align: center;
+        padding-top: 2rem;
+        border-top: 1px solid rgba(255,255,255,0.1);
+        color: rgba(255,255,255,0.6);
+      }
+      
+      /* Responsive */
+      @media (max-width: 768px) {
+        .hero-content {
+          grid-template-columns: 1fr;
+          text-align: center;
+        }
+        
+        .hero-text h1 {
+          font-size: 2.5rem;
+        }
+        
+        .nav-links {
+          display: none;
+        }
+        
+        .section-title {
+          font-size: 2rem;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Header -->
+    <header>
+      <nav class="container">
+        <div class="logo">
+          <svg width="40" height="40" viewBox="0 0 100 100" fill="none">
+            <rect width="100" height="100" rx="20" fill="#052e1a"/>
+            <circle cx="50" cy="35" r="15" fill="white"/>
+            <circle cx="35" cy="60" r="12" fill="white"/>
+            <circle cx="65" cy="60" r="12" fill="white"/>
+            <rect x="45" y="50" width="10" height="20" fill="#f97316"/>
+          </svg>
+          منصة السند
+        </div>
+        <ul class="nav-links">
+          <li><a href="#features">المميزات</a></li>
+          <li><a href="#apps">التطبيقات</a></li>
+          <li><a href="#how-it-works">كيف يعمل</a></li>
+        </ul>
+        <a href="https://sudan-online-store.vercel.app" class="btn btn-primary">دخول التطبيق</a>
+      </nav>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero">
+      <div class="container">
+        <div class="hero-content">
+          <div class="hero-text">
+            <h1>أول <span>Marketplace</span> سوداني متكامل</h1>
+            <p>منصة السند تجمع بين الإدارة والتجارة والتسوق في مكان واحد. حلول متكاملة للتجار والعملاء وإدارة الأعمال.</p>
+            <div class="hero-buttons">
+              <a href="https://sudan-online-store.vercel.app" class="btn btn-primary">ابدأ الآن</a>
+              <a href="#apps" class="btn btn-outline">استكشف التطبيقات</a>
+            </div>
+          </div>
+          <div class="hero-image">
+            <img src="https://sudan-online-store.vercel.app/screenshots/home-1.jpg" alt="منصة السند" />
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="features" id="features">
+      <div class="container">
+        <h2 class="section-title">لماذا منصة السند؟</h2>
+        <p class="section-subtitle">حلول متكاملة مصممة خصيصاً للسوق السوداني</p>
+        
+        <div class="features-grid">
+          <div class="feature-card">
+            <div class="feature-icon">🏪</div>
+            <h3>متجر إلكتروني متكامل</h3>
+            <p>أنشئ متجرك الإلكتروني بسهولة واعرض منتجاتك لآلاف العملاء في جميع أنحاء السودان</p>
+          </div>
+          
+          <div class="feature-card">
+            <div class="feature-icon">📊</div>
+            <h3>إدارة ذكية</h3>
+            <p>لوحة تحكم متقدمة لإدارة المنتجات، الطلبات، والمخزون مع تقارير وتحليلات شاملة</p>
+          </div>
+          
+          <div class="feature-card">
+            <div class="feature-icon">💳</div>
+            <h3>مدفوعات آمنة</h3>
+            <p>نظام دفع متكامل وآمن يدعم جميع وسائل الدفع المحلية والعالمية</p>
+          </div>
+          
+          <div class="feature-card">
+            <div class="feature-icon">🚚</div>
+            <h3>توصيل سريع</h3>
+            <p>شبكة توصيل واسعة تغطي جميع ولايات السودان مع تتبع مباشر للطلبات</p>
+          </div>
+          
+          <div class="feature-card">
+            <div class="feature-icon">📱</div>
+            <h3>تطبيقات متعددة</h3>
+            <p>تطبيقات مخصصة للإدارة والتجار والعملاء، كل واحد مصمم لاحتياجاته</p>
+          </div>
+          
+          <div class="feature-card">
+            <div class="feature-icon"></div>
+            <h3>أمان عالي</h3>
+            <p>حماية متقدمة للبيانات والمعاملات مع تشفير كامل ونسخ احتياطي تلقائي</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Apps Section -->
+    <section class="apps" id="apps">
+      <div class="container">
+        <h2 class="section-title">ثلاثة تطبيقات، منصة واحدة</h2>
+        <p class="section-subtitle">كل تطبيق مصمم خصيصاً لدوره في المنظومة</p>
+        
+        <div class="apps-grid">
+          <div class="app-card">
+            <div class="app-icon">⚙️</div>
+            <h3>إدارة السند</h3>
+            <p>لوحة تحكم شاملة لإدارة المنصة، المستخدمين، التقارير، والإعدادات العامة</p>
+            <a href="https://sudan-online-store.vercel.app/admin.html" class="app-btn app-btn-admin">دخول لوحة الإدارة</a>
+          </div>
+          
+          <div class="app-card">
+            <div class="app-icon">🏪</div>
+            <h3>تاجر السند</h3>
+            <p>تطبيق التاجر لإدارة المنتجات، المخزون، الطلبات، ونقاط البيع</p>
+            <a href="https://sudan-online-store.vercel.app/merchant.html" class="app-btn app-btn-merchant">دخول تطبيق التاجر</a>
+          </div>
+          
+          <div class="app-card">
+            <div class="app-icon">🛍️</div>
+            <h3>السند</h3>
+            <p>تطبيق الجمهور للتسوق، تصفح المنتجات، وإدارة الطلبات</p>
+            <a href="https://sudan-online-store.vercel.app/client.html" class="app-btn app-btn-client">دخول تطبيق التسوق</a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- How it Works -->
+    <section class="how-it-works" id="how-it-works">
+      <div class="container">
+        <h2 class="section-title">كيف تعمل المنصة؟</h2>
+        <p class="section-subtitle">ثلاث خطوات بسيطة للبدء</p>
+        
+        <div class="steps-grid">
+          <div class="step-card">
+            <div class="step-number">1</div>
+            <h3>سجّل حسابك</h3>
+            <p>أنشئ حسابك مجاناً في دقائق واختر نوع الحساب (تاجر أو عميل)</p>
+          </div>
+          
+          <div class="step-card">
+            <div class="step-number">2</div>
+            <h3>أنشئ متجرك</h3>
+            <p>أضف منتجاتك وحدد الأسعار وابدأ البيع فوراً</p>
+          </div>
+          
+          <div class="step-card">
+            <div class="step-number">3</div>
+            <h3>ابدأ البيع</h3>
+            <p>استقبل الطلبات وأدرها وتابع التوصيل من مكان واحد</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+      <div class="container">
+        <div class="footer-content">
+          <div class="footer-section">
+            <h4>منصة السند</h4>
+            <p>أول marketplace سوداني متكامل يجمع بين الإدارة والتجارة والتسوق في مكان واحد</p>
+          </div>
+          
+          <div class="footer-section">
+            <h4>روابط سريعة</h4>
+            <p><a href="#features">المميزات</a></p>
+            <p><a href="#apps">التطبيقات</a></p>
+            <p><a href="#how-it-works">كيف يعمل</a></p>
+            <p><a href="https://sudan-online-store.vercel.app">دخول التطبيق</a></p>
+          </div>
+          
+          <div class="footer-section">
+            <h4>التطبيقات</h4>
+            <p><a href="https://sudan-online-store.vercel.app/admin.html">إدارة السند</a></p>
+            <p><a href="https://sudan-online-store.vercel.app/merchant.html">تاجر السند</a></p>
+            <p><a href="https://sudan-online-store.vercel.app/client.html">السند - تسوق</a></p>
+          </div>
+          
+          <div class="footer-section">
+            <h4>تواصل معنا</h4>
+            <p>📧 info@sanad.sd</p>
+            <p>📱 +249 900 000 000</p>
+            <p>📍 الخرطوم، السودان</p>
+          </div>
+        </div>
+        
+        <div class="footer-bottom">
+          <p>© 2026 منصة السند. جميع الحقوق محفوظة.</p>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>
