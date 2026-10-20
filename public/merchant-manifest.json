@@ -1,9 +1,9 @@
 {
-  "name": "تاجر السند",
+  "name": "تاجر السند - نقطة البيع والمخزون",
   "short_name": "تاجر السند",
-  "description": "تطبيق التاجر لنقاط البيع وإدارة المخزون",
+  "description": "تطبيق التاجر لنقاط البيع وإدارة المخزون والورديات والتقارير",
   "start_url": "/#/merchant",
-  "scope": "/#/merchant",
+  "scope": "/",
   "display": "standalone",
   "orientation": "portrait",
   "theme_color": "#059669",
@@ -12,11 +12,32 @@
   "dir": "rtl",
   "icons": [
     {
-      "src": "data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='110' fill='%23059669'/%3E%3Ctext x='256' y='320' font-size='240' text-anchor='middle'%3E%F0%9F%8F%AA%3C/text%3E%3C/svg%3E",
+      "src": "/icons/merchant-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icons/merchant-512.png",
       "sizes": "512x512",
-      "type": "image/svg+xml",
+      "type": "image/png",
       "purpose": "any maskable"
     }
   ],
-  "categories": ["business", "finance"]
+  "screenshots": [
+    {
+      "src": "/screenshots/merchant-1.jpg",
+      "sizes": "1280x720",
+      "type": "image/jpeg",
+      "form_factor": "wide"
+    }
+  ],
+  "categories": ["business", "finance"],
+  "shortcuts": [
+    {
+      "name": "نقطة البيع",
+      "url": "/#/merchant",
+      "icons": [{"src": "/icons/merchant-192.png", "sizes": "192x192"}]
+    }
+  ]
 }
