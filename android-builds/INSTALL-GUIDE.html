@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>دليل تثبيت تطبيقات منصة سند</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Segoe UI', Tahoma, Arial, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      padding: 20px;
+      color: #333;
+    }
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+    }
+    .header {
+      text-align: center;
+      color: white;
+      margin-bottom: 30px;
+    }
+    .header h1 {
+      font-size: 2.5em;
+      margin-bottom: 10px;
+      text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+    }
+    .header p {
+      font-size: 1.2em;
+      opacity: 0.9;
+    }
+    .method {
+      background: white;
+      border-radius: 20px;
+      padding: 30px;
+      margin-bottom: 25px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+    }
+    .method h2 {
+      font-size: 1.8em;
+      margin-bottom: 15px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .method h2 .icon {
+      font-size: 1.5em;
+    }
+    .method h3 {
+      font-size: 1.3em;
+      margin: 20px 0 10px 0;
+      color: #667eea;
+    }
+    .steps {
+      background: #f8f9fa;
+      border-radius: 15px;
+      padding: 20px;
+      margin: 15px 0;
+    }
+    .step {
+      background: white;
+      border-radius: 10px;
+      padding: 15px;
+      margin-bottom: 10px;
+      border-right: 4px solid #667eea;
+    }
+    .step:last-child {
+      margin-bottom: 0;
+    }
+    .step-number {
+      display: inline-block;
+      background: #667eea;
+      color: white;
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      text-align: center;
+      line-height: 30px;
+      font-weight: bold;
+      margin-left: 10px;
+    }
+    .code {
+      background: #2d3748;
+      color: #48bb78;
+      padding: 15px;
+      border-radius: 10px;
+      font-family: 'Courier New', monospace;
+      font-size: 0.95em;
+      overflow-x: auto;
+      margin: 10px 0;
+      direction: ltr;
+      text-align: left;
+    }
+    .warning {
+      background: #fff3cd;
+      border-right: 4px solid #ffc107;
+      padding: 15px;
+      border-radius: 10px;
+      margin: 15px 0;
+    }
+    .success {
+      background: #d4edda;
+      border-right: 4px solid #28a745;
+      padding: 15px;
+      border-radius: 10px;
+      margin: 15px 0;
+    }
+    .app-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 20px;
+      margin: 20px 0;
+    }
+    .app-card {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 25px;
+      border-radius: 15px;
+      text-align: center;
+      transition: transform 0.3s;
+    }
+    .app-card:hover {
+      transform: translateY(-5px);
+    }
+    .app-card.admin {
+      background: linear-gradient(135deg, #5B21B6 0%, #7C3AED 100%);
+    }
+    .app-card.merchant {
+      background: linear-gradient(135deg, #059669 0%, #10B981 100%);
+    }
+    .app-card.client {
+      background: linear-gradient(135deg, #D97706 0%, #F59E0B 100%);
+    }
+    .app-card h3 {
+      font-size: 1.5em;
+      margin-bottom: 10px;
+    }
+    .app-card p {
+      opacity: 0.9;
+      margin-bottom: 15px;
+    }
+    .btn {
+      display: inline-block;
+      background: white;
+      color: #333;
+      padding: 10px 20px;
+      border-radius: 25px;
+      text-decoration: none;
+      font-weight: bold;
+      transition: all 0.3s;
+    }
+    .btn:hover {
+      transform: scale(1.05);
+      box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+    }
+    .comparison {
+      overflow-x: auto;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 15px 0;
+    }
+    th, td {
+      padding: 12px;
+      text-align: right;
+      border-bottom: 1px solid #ddd;
+    }
+    th {
+      background: #667eea;
+      color: white;
+    }
+    tr:hover {
+      background: #f5f5f5;
+    }
+    .footer {
+      text-align: center;
+      color: white;
+      margin-top: 30px;
+      padding: 20px;
+      opacity: 0.8;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>📱 دليل تثبيت تطبيقات منصة سند</h1>
+      <p>3 طرق لتثبيت التطبيقات على هاتفك أو كمبيوترك</p>
+    </div>
+
+    <!-- التطبيقات الثلاث -->
+    <div class="method">
+      <h2><span class="icon">🎯</span> التطبيقات المتاحة</h2>
+      <div class="app-grid">
+        <div class="app-card admin">
+          <h3>️ إدارة السند</h3>
+          <p>لوحة إدارة المنصة المركزية</p>
+          <a href="https://sudan-online-store.vercel.app/admin" class="btn" target="_blank">فتح التطبيق</a>
+        </div>
+        <div class="app-card merchant">
+          <h3>🏪 تاجر السند</h3>
+          <p>نقطة البيع وإدارة المخزون</p>
+          <a href="https://sudan-online-store.vercel.app/merchant" class="btn" target="_blank">فتح التطبيق</a>
+        </div>
+        <div class="app-card client">
+          <h3>🛍️ سند</h3>
+          <p>تطبيق التسوق والطلبات</p>
+          <a href="https://sudan-online-store.vercel.app/client" class="btn" target="_blank">فتح التطبيق</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- الطريقة 1: PWA -->
+    <div class="method">
+      <h2><span class="icon">⚡</span> الطريقة 1: PWA (الأسرع والأسهل)</h2>
+      <div class="success">
+        ✅ <strong>مميزات PWA:</strong> فوري، يعمل Offline، تحديثات تلقائية، لا يحتاج بناء
+      </div>
+
+      <h3>📱 على Android:</h3>
+      <div class="steps">
+        <div class="step">
+          <span class="step-number">1</span>
+          افتح Chrome على هاتفك
+        </div>
+        <div class="step">
+          <span class="step-number">2</span>
+          ادخل على: <code>https://sudan-online-store.vercel.app</code>
+        </div>
+        <div class="step">
+          <span class="step-number">3</span>
+          اضغط على القائمة (⋮) في أعلى يمين Chrome
+        </div>
+        <div class="step">
+          <span class="step-number">4</span>
+          اختر <strong>"تثبيت التطبيق"</strong> أو <strong>"Add to Home Screen"</strong>
+        </div>
+        <div class="step">
+          <span class="step-number">5</span>
+          اضغط <strong>"تثبيت"</strong> وسيظهر التطبيق على الشاشة الرئيسية!
+        </div>
+      </div>
+
+      <h3>🍎 على iPhone (iOS):</h3>
+      <div class="steps">
+        <div class="step">
+          <span class="step-number">1</span>
+          افتح Safari وادخل على الموقع
+        </div>
+        <div class="step">
+          <span class="step-number">2</span>
+          اضغط على زر <strong>المشاركة</strong> (مربع مع سهم لأعلى)
+        </div>
+        <div class="step">
+          <span class="step-number">3</span>
+          اختر <strong>"إضافة إلى الشاشة الرئيسية"</strong>
+        </div>
+        <div class="step">
+          <span class="step-number">4</span>
+          اضغط <strong>"إضافة"</strong>
+        </div>
+      </div>
+
+      <h3>💻 على الكمبيوتر:</h3>
+      <div class="steps">
+        <div class="step">
+          <span class="step-number">1</span>
+          افتح Chrome أو Edge
+        </div>
+        <div class="step">
+          <span class="step-number">2</span>
+          اضغط على أيقونة <strong>التثبيت</strong> في شريط العنوان (يمين)
+        </div>
+        <div class="step">
+          <span class="step-number">3</span>
+          اختر <strong>"تثبيت"</strong>
+        </div>
+      </div>
+    </div>
+
+    <!-- الطريقة 2: APK -->
+    <div class="method">
+      <h2><span class="icon">📦</span> الطريقة 2: بناء APK (للمطورين)</h2>
+      <div class="warning">
+        ⚠️ <strong>متطلبات:</strong> Node.js 18+، Java JDK 17+، Android SDK
+      </div>
+
+      <h3>🚀 البناء التلقائي (موصى به):</h3>
+      <div class="code">
+# 1. تحميل المشروع<br>
+git clone https://github.com/tajalsir2026-byte/Sudan-Online-Store.git<br>
+cd Sudan-Online-Store/android-builds<br><br>
+# 2. إعطاء صلاحيات<br>
+chmod +x build-all.sh<br><br>
+# 3. تشغيل السكريبت<br>
+./build-all.sh<br><br>
+# 4. ستجد 3 ملفات APK:<br>
+# - sanad-admin.apk (إدارة المنصة)<br>
+# - sanad-merchant.apk (تاجر السند)<br>
+# - sanad-client.apk (تطبيق الجمهور)
+      </div>
+
+      <h3>🔧 البناء اليدوي (تطبيق واحد):</h3>
+      <div class="code">
+# بناء تطبيق الإدارة:<br>
+cd android-builds/admin-app<br>
+npm install<br>
+npx cap sync android<br>
+cd android<br>
+./gradlew assembleDebug<br>
+cd ..<br>
+cp android/app/build/outputs/apk/debug/app-debug.apk ../sanad-admin.apk<br><br>
+# نفس الخطوات للتطبيقات الأخرى
+      </div>
+    </div>
+
+    <!-- مقارنة -->
+    <div class="method">
+      <h2><span class="icon">️</span> مقارنة الطرق</h2>
+      <div class="comparison">
+        <table>
+          <tr>
+            <th>الميزة</th>
+            <th>PWA</th>
+            <th>APK Debug</th>
+            <th>APK Release</th>
+          </tr>
+          <tr>
+            <td>السرعة</td>
+            <td>⚡ فوري</td>
+            <td>🐢 متوسط</td>
+            <td>🐢 بطيء</td>
+          </tr>
+          <tr>
+            <td>Offline</td>
+            <td>✅</td>
+            <td>✅</td>
+            <td>✅</td>
+          </tr>
+          <tr>
+            <td>Google Play</td>
+            <td>❌</td>
+            <td>❌</td>
+            <td>✅</td>
+          </tr>
+          <tr>
+            <td>تحديثات</td>
+            <td>تلقائية</td>
+            <td>يدوية</td>
+            <td>يدوية</td>
+          </tr>
+          <tr>
+            <td>الحجم</td>
+            <td>~1 MB</td>
+            <td>~50 MB</td>
+            <td>~30 MB</td>
+          </tr>
+          <tr>
+            <td>الاستخدام</td>
+            <td>للجميع</td>
+            <td>للمطورين</td>
+            <td>للنشر</td>
+          </tr>
+        </table>
+      </div>
+    </div>
+
+    <!-- troubleshooting -->
+    <div class="method">
+      <h2><span class="icon">🔧</span> حل المشاكل</h2>
+      
+      <h3>❓ PWA: "تثبيت التطبيق" غير ظاهر</h3>
+      <div class="steps">
+        <div class="step">تأكد من استخدام Chrome (ليس Firefox/Safari)</div>
+        <div class="step">تأكد من أن الموقع HTTPS (ليس HTTP)</div>
+        <div class="step">جرب: الإعدادات → تطبيقات الويب → تثبيت</div>
+      </div>
+
+      <h3>❓ APK: JAVA_HOME is not set</h3>
+      <div class="code">
+export JAVA_HOME=/usr/lib/jvm/java-17-openjdk
+      </div>
+
+      <h3>❓ APK: SDK location not found</h3>
+      <div class="code">
+export ANDROID_HOME=$HOME/Android/Sdk<br>
+echo "sdk.dir=$ANDROID_HOME" > android/local.properties
+      </div>
+
+      <h3>❓ APK: Gradle build failed</h3>
+      <div class="code">
+./gradlew clean<br>
+./gradlew assembleDebug
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="footer">
+      <p><strong>منصة سند — SANAD POS & COMMERCE</strong></p>
+      <p>20 أكتوبر 2026</p>
+      <p style="margin-top: 10px; font-size: 0.9em;">
+         support@sanad.sd | 📱 WhatsApp: 0912345678
+      </p>
+    </div>
+  </div>
+</body>
+</html>
