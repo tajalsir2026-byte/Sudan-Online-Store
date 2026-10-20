@@ -499,24 +499,43 @@ class ApiClient {
   }
 
   public async submitStoreOrder(slug: string, payload: any): Promise<{ success: boolean; order: StorefrontOrder }> {
-    const res = await fetch(`/api/storefront/${slug}/order`, {
+    const res = await fetch(`/api/storefront/orders`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
+      headers: { 
+        'Content-Type': 'application/json',
+        'x-tenant-id': this.tenantId,
+      },
+      body: JSON.stringify({
+        ...payload,
+        tenantId: this.tenantId,
+      }),
     });
-    if (!res.ok) throw new Error('فشل إرسال الطلب');
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      throw new Error(data.error || 'فشل إرسال الطلب');
+    }
     return res.json();
   }
 
   public async getStorefrontOrders(): Promise<{ orders: StorefrontOrder[] }> {
-    return this.request('/storefront-orders');
+    const res = await fetch('/api/storefront/orders', {
+      headers: { 'x-tenant-id': this.tenantId },
+    });
+    if (!res.ok) throw new Error('فشل جلب الطلبات');
+    return res.json();
   }
 
   public async updateStoreOrderStatus(id: string, status: string, paymentStatus?: string): Promise<{ success: boolean }> {
-    return this.request(`/storefront-orders/${id}/status`, {
+    const res = await fetch(`/api/storefront/orders/${id}/status`, {
       method: 'PUT',
+      headers: { 
+        'Content-Type': 'application/json',
+        'x-tenant-id': this.tenantId,
+      },
       body: JSON.stringify({ status, paymentStatus }),
     });
+    if (!res.ok) throw new Error('فشل تحديث حالة الطلب');
+    return res.json();
   }
 
   /* Subscriptions */
@@ -602,10 +621,39 @@ class ApiClient {
   }
 
   public async createAlbandarListing(payload: Partial<AlbandarListing>): Promise<{ success: boolean; listing: AlbandarListing }> {
-    return this.request('/albandar/listings', {
+    const res = await fetch('/api/storefront/ads', {
       method: 'POST',
-      body: JSON.stringify(payload),
+      headers: { 
+        'Content-Type': 'application/json',
+        'x-tenant-id': this.tenantId,
+      },
+      body: JSON.stringify({
+        ...payload,
+        tenantId: this.tenantId,
+      }),
     });
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      throw new Error(data.error || 'فشل نشر الإعلان');
+    }
+    return res.json();
+  }
+
+  public async getPublicAlbandarListings(params?: {
+    category?: string;
+    city?: string;
+  }): Promise<{ ads: AlbandarListing[] }> {
+    const q = new URLSearchParams();
+    if (params?.category && params.category !== 'all') {
+      q.append('category', params.category);
+    }
+    if (params?.city) {
+      q.append('city', params.city);
+    }
+    const queryString = q.toString() ? `?${q.toString()}` : '';
+    const res = await fetch(`/api/storefront/ads/public${queryString}`);
+    if (!res.ok) throw new Error('فشل جلب الإعلانات');
+    return res.json();
   }
 
   public async getAlbandarShowrooms(): Promise<{ showrooms: AlbandarShowroom[] }> {
