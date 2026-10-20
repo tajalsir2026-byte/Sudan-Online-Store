@@ -1,0 +1,25 @@
+{
+  "appId": "sd.sanad.merchant",
+  "appName": "تاجر السند",
+  "webDir": "www",
+  "server": {
+    "url": "https://sudan-online-store.vercel.app/merchant",
+    "cleartext": true
+  },
+  "android": {
+    "allowMixedContent": true,
+    "backgroundColor": "#059669"
+  },
+  "plugins": {
+    "SplashScreen": {
+      "launchShowDuration": 2000,
+      "backgroundColor": "#059669",
+      "androidSplashResourceName": "splash",
+      "showSpinner": false
+    },
+    "StatusBar": {
+      "backgroundColor": "#059669",
+      "style": "LIGHT"
+    }
+  }
+}

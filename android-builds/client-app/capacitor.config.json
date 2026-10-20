@@ -1,0 +1,25 @@
+{
+  "appId": "sd.sanad.client",
+  "appName": "سند",
+  "webDir": "www",
+  "server": {
+    "url": "https://sudan-online-store.vercel.app/client",
+    "cleartext": true
+  },
+  "android": {
+    "allowMixedContent": true,
+    "backgroundColor": "#D97706"
+  },
+  "plugins": {
+    "SplashScreen": {
+      "launchShowDuration": 2000,
+      "backgroundColor": "#D97706",
+      "androidSplashResourceName": "splash",
+      "showSpinner": false
+    },
+    "StatusBar": {
+      "backgroundColor": "#D97706",
+      "style": "LIGHT"
+    }
+  }
+}

@@ -1,0 +1,25 @@
+{
+  "appId": "sd.sanad.admin",
+  "appName": "إدارة السند",
+  "webDir": "www",
+  "server": {
+    "url": "https://sudan-online-store.vercel.app/admin",
+    "cleartext": true
+  },
+  "android": {
+    "allowMixedContent": true,
+    "backgroundColor": "#5B21B6"
+  },
+  "plugins": {
+    "SplashScreen": {
+      "launchShowDuration": 2000,
+      "backgroundColor": "#5B21B6",
+      "androidSplashResourceName": "splash",
+      "showSpinner": false
+    },
+    "StatusBar": {
+      "backgroundColor": "#5B21B6",
+      "style": "LIGHT"
+    }
+  }
+}

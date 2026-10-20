@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <linearGradient id="adminBg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#5B21B6"/>
+      <stop offset="100%" style="stop-color:#7C3AED"/>
+    </linearGradient>
+  </defs>
+  
+  <!-- Background -->
+  <rect width="512" height="512" rx="110" fill="url(#adminBg)"/>
+  
+  <!-- Shield Icon -->
+  <g transform="translate(156, 140)">
+    <path d="M100 0 L200 40 L200 120 C200 180 150 220 100 240 C50 220 0 180 0 120 L0 40 Z" 
+          fill="white" opacity="0.95"/>
+    
+    <!-- Star inside shield -->
+    <path d="M100 50 L115 90 L160 90 L125 115 L140 155 L100 130 L60 155 L75 115 L40 90 L85 90 Z" 
+          fill="#5B21B6"/>
+  </g>
+  
+  <!-- Text: إدارة -->
+  <text x="256" y="420" font-family="Arial, sans-serif" font-size="56" font-weight="bold" 
+        fill="white" text-anchor="middle">إدارة السند</text>
+</svg>

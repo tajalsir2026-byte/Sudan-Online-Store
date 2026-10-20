@@ -5,10 +5,22 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>سند - المنصة السحابية للتجارة ونقاط البيع الذكية | Sanad POS & Commerce</title>
     <meta name="description" content="منصة سحابية متكاملة متعددة المتاجر والفروع مخصصة للأعمال والمتاجر في السودان، تدعم نقاط البيع (POS) دون اتصال، إدارة المخزون والتحويلات، والتقارير المالية والورديات، والمتاجر الإلكترونية، وتعدد العملات والاشتراكات." />
+    
+    <!-- PWA Support -->
+    <link rel="manifest" href="/manifest.json" />
+    <meta name="theme-color" content="#059669" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="سند" />
+    <link rel="apple-touch-icon" href="/icons/sanad-192.png" />
+    
+    <!-- Open Graph -->
     <meta property="og:title" content="سند - المنصة السحابية للتجارة ونقاط البيع الذكية | Sanad POS & Commerce" />
     <meta property="og:description" content="منصة سحابية متكاملة متعددة المتاجر والفروع مخصصة للأعمال والمتاجر في السودان، تدعم نقاط البيع (POS) دون اتصال، إدارة المخزون والتحويلات، والتقارير المالية والورديات، والمتاجر الإلكترونية، وتعدد العملات والاشتراكات." />
     <meta property="og:type" content="website" />
     <meta name="twitter:card" content="summary_large_image" />
+    
+    <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
@@ -16,6 +28,19 @@
   <body class="bg-slate-50 text-slate-900 antialiased font-sans selection:bg-emerald-500 selection:text-white">
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
+    
+    <!-- Register Service Worker for PWA -->
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/sw.js').then((registration) => {
+            console.log('SW registered: ', registration);
+          }).catch((registrationError) => {
+            console.log('SW registration failed: ', registrationError);
+          });
+        });
+      }
+    </script>
   </body>
 </html>
 

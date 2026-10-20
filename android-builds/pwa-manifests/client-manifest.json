@@ -1,0 +1,39 @@
+{
+  "name": "سند - تطبيق التسوق والطلبات",
+  "short_name": "سند",
+  "description": "تطبيق الجمهور لتصفح المنتجات والطلبات ونقاط الولاء",
+  "start_url": "/client",
+  "display": "standalone",
+  "orientation": "portrait",
+  "theme_color": "#D97706",
+  "background_color": "#D97706",
+  "lang": "ar",
+  "dir": "rtl",
+  "icons": [
+    {
+      "src": "/icons/client-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/icons/client-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ],
+  "categories": ["shopping", "lifestyle"],
+  "shortcuts": [
+    {
+      "name": "تسوق",
+      "short_name": "Shop",
+      "url": "/client",
+      "icons": [{"src": "/icons/client-96.png", "sizes": "96x96"}]
+    },
+    {
+      "name": "طلباتي",
+      "short_name": "Orders",
+      "url": "/client/orders",
+      "icons": [{"src": "/icons/client-96.png", "sizes": "96x96"}]
+    }
+  ]
+}

@@ -1,0 +1,21 @@
+{
+  "name": "sanad-admin-app",
+  "version": "1.0.0",
+  "description": "منصة إدارة السند - Super Admin Dashboard",
+  "main": "index.js",
+  "scripts": {
+    "build": "cap sync android",
+    "open": "cap open android",
+    "build-apk": "cd android && ./gradlew assembleDebug",
+    "build-release": "cd android && ./gradlew assembleRelease"
+  },
+  "dependencies": {
+    "@capacitor/android": "^6.0.0",
+    "@capacitor/core": "^6.0.0",
+    "@capacitor/splash-screen": "^6.0.0",
+    "@capacitor/status-bar": "^6.0.0"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^6.0.0"
+  }
+}
