@@ -6,13 +6,12 @@
     <title>سند - المنصة السحابية للتجارة ونقاط البيع الذكية | Sanad POS & Commerce</title>
     <meta name="description" content="منصة سحابية متكاملة متعددة المتاجر والفروع مخصصة للأعمال والمتاجر في السودان، تدعم نقاط البيع (POS) دون اتصال، إدارة المخزون والتحويلات، والتقارير المالية والورديات، والمتاجر الإلكترونية، وتعدد العملات والاشتراكات." />
     
-    <!-- PWA Support -->
-    <link rel="manifest" href="/manifest.json" />
+    <!-- Dynamic PWA Manifest - loaded based on URL path -->
+    <link id="pwa-manifest" rel="manifest" href="/manifest.json" />
     <meta name="theme-color" content="#059669" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="سند" />
-    <link rel="apple-touch-icon" href="/icons/sanad-192.png" />
     
     <!-- Open Graph -->
     <meta property="og:title" content="سند - المنصة السحابية للتجارة ونقاط البيع الذكية | Sanad POS & Commerce" />
@@ -24,6 +23,28 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    
+    <script>
+      // Dynamic manifest based on URL path
+      const path = window.location.pathname;
+      const manifestLink = document.getElementById('pwa-manifest');
+      const themeColor = document.querySelector('meta[name="theme-color"]');
+      const appleTitle = document.querySelector('meta[name="apple-mobile-web-app-title"]');
+      
+      if (path.startsWith('/admin')) {
+        manifestLink.href = '/admin-manifest.json';
+        themeColor.content = '#5B21B6';
+        appleTitle.content = 'إدارة السند';
+      } else if (path.startsWith('/merchant')) {
+        manifestLink.href = '/merchant-manifest.json';
+        themeColor.content = '#059669';
+        appleTitle.content = 'تاجر السند';
+      } else if (path.startsWith('/client')) {
+        manifestLink.href = '/client-manifest.json';
+        themeColor.content = '#D97706';
+        appleTitle.content = 'سند';
+      }
+    </script>
   </head>
   <body class="bg-slate-50 text-slate-900 antialiased font-sans selection:bg-emerald-500 selection:text-white">
     <div id="root"></div>

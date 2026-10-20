@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>تطبيقات منصة سند</title>
+<title>تطبيقات منصة سند - روابط APK</title>
 <style>
 * { margin:0; padding:0; box-sizing:border-box; }
 body {
@@ -20,14 +20,18 @@ body {
   padding: 40px 20px;
   margin-bottom: 30px;
 }
-.header h1 {
-  font-size: 2.4em;
-  margin-bottom: 12px;
+.header h1 { font-size: 2.4em; margin-bottom: 12px; }
+.header p { font-size: 1.1em; opacity: 0.85; }
+.alert {
+  background: #fef3c7;
+  border-right: 4px solid #f59e0b;
+  padding: 20px;
+  border-radius: 16px;
+  margin-bottom: 30px;
+  color: #92400e;
 }
-.header p {
-  font-size: 1.1em;
-  opacity: 0.85;
-}
+.alert h3 { margin-bottom: 10px; font-size: 1.2em; }
+.alert ol { padding-right: 20px; line-height: 1.8; }
 .apps {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
@@ -40,34 +44,21 @@ body {
   box-shadow: 0 20px 50px rgba(0,0,0,0.4);
   background: white;
 }
-.app-header {
-  padding: 30px;
-  text-align: center;
-  color: white;
-}
+.app-header { padding: 30px; text-align: center; color: white; }
 .app.admin .app-header { background: linear-gradient(135deg, #5B21B6, #7C3AED); }
 .app.merchant .app-header { background: linear-gradient(135deg, #059669, #10B981); }
 .app.client .app-header { background: linear-gradient(135deg, #D97706, #F59E0B); }
 .app-icon {
-  width: 90px;
-  height: 90px;
+  width: 90px; height: 90px;
   border-radius: 22px;
   margin: 0 auto 16px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  display: flex; align-items: center; justify-content: center;
   font-size: 44px;
   background: rgba(255,255,255,0.2);
   backdrop-filter: blur(10px);
 }
-.app-header h2 {
-  font-size: 1.7em;
-  margin-bottom: 6px;
-}
-.app-header p {
-  font-size: 0.95em;
-  opacity: 0.9;
-}
+.app-header h2 { font-size: 1.7em; margin-bottom: 6px; }
+.app-header p { font-size: 0.95em; opacity: 0.9; }
 .app-body { padding: 24px; }
 .url-box {
   background: #f1f5f9;
@@ -117,10 +108,7 @@ body {
   color: white;
 }
 .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 10px 20px rgba(59,130,246,0.3); }
-.btn-secondary {
-  background: #f1f5f9;
-  color: #334155;
-}
+.btn-secondary { background: #f1f5f9; color: #334155; }
 .btn-secondary:hover { background: #e2e8f0; }
 .footer {
   text-align: center;
@@ -128,18 +116,6 @@ body {
   padding: 20px;
   font-size: 0.9em;
 }
-.note {
-  background: #1e293b;
-  border-radius: 16px;
-  padding: 20px;
-  margin-bottom: 24px;
-  color: #e2e8f0;
-  border-right: 4px solid #3b82f6;
-}
-.note h3 { color: #60a5fa; margin-bottom: 10px; font-size: 1.1em; }
-.note ol { padding-right: 20px; line-height: 1.8; }
-.note a { color: #60a5fa; text-decoration: none; }
-.note a:hover { text-decoration: underline; }
 </style>
 </head>
 <body>
@@ -147,23 +123,21 @@ body {
 
   <div class="header">
     <h1>📱 تطبيقات منصة سند</h1>
-    <p>3 تطبيقات منفصلة — روابط مباشرة + ملفات APK جاهزة للتوزيع</p>
+    <p>3 تطبيقات منفصلة — روابط مباشرة + APK للتوزيع</p>
   </div>
 
-  <!-- Note -->
-  <div class="note">
-    <h3> كيف تحصل على APK لكل تطبيق؟</h3>
+  <div class="alert">
+    <h3>⚠️ إصلاح مشكلة فتح التطبيقات</h3>
+    <p style="margin-bottom: 10px;">إذا كانت التطبيقات تفتح نفس التطبيق الخاطئ، اتبع هذه الخطوات:</p>
     <ol>
-      <li>اضغط زر <strong>"📦 تحميل APK"</strong> — سيفتح PWABuilder (خدمة Microsoft مجانية)</li>
-      <li>انتظر 30 ثانية حتى يجهّز الحزمة</li>
-      <li>اضغط <strong>"Download APK"</strong> — سيتم تحميل ملف APK جاهز على هاتفك</li>
-      <li>انقل الملف للناس وافتحه على أي أندرويد — سيُثبّت فوراً</li>
+      <li><strong>احذف التطبيقات القديمة</strong> من هاتفك (إدارة السند، تاجر السند، سند)</li>
+      <li><strong>امسح Cache المتصفح</strong> (Chrome → الإعدادات → الخصوصية → مسح البيانات)</li>
+      <li><strong>أعد تثبيت التطبيقات</strong> من الروابط أدناه — كل تطبيق الآن مستقل</li>
     </ol>
   </div>
 
   <div class="apps">
 
-    <!-- ADMIN APP -->
     <div class="app admin">
       <div class="app-header">
         <div class="app-icon">🛡️</div>
@@ -179,12 +153,11 @@ body {
           📦 تحميل APK
         </a>
         <a href="https://sudan-online-store.vercel.app/admin" target="_blank" class="btn btn-secondary">
-           فتح التطبيق مباشرة
+          🌐 فتح التطبيق مباشرة
         </a>
       </div>
     </div>
 
-    <!-- MERCHANT APP -->
     <div class="app merchant">
       <div class="app-header">
         <div class="app-icon">🏪</div>
@@ -205,10 +178,9 @@ body {
       </div>
     </div>
 
-    <!-- CLIENT APP -->
     <div class="app client">
       <div class="app-header">
-        <div class="app-icon">️</div>
+        <div class="app-icon">🛍️</div>
         <h2>سند</h2>
         <p>تطبيق الجمهور</p>
       </div>
@@ -218,7 +190,7 @@ body {
           <button class="copy-btn" onclick="copyUrl('https://sudan-online-store.vercel.app/client',this)">نسخ</button>
         </div>
         <a href="https://www.pwabuilder.com/?url=https%3A%2F%2Fsudan-online-store.vercel.app%2Fclient" target="_blank" class="btn btn-primary">
-           تحميل APK
+          📦 تحميل APK
         </a>
         <a href="https://sudan-online-store.vercel.app/client" target="_blank" class="btn btn-secondary">
           🌐 فتح التطبيق مباشرة
