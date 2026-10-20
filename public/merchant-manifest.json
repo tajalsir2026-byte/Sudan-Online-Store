@@ -27,7 +27,7 @@
   ],
   "screenshots": [
     {
-      "src": "/assets/screenshots/merchant-1.jpg",
+      "src": "/screenshots/merchant-1.jpg",
       "sizes": "1280x720",
       "type": "image/jpeg",
       "form_factor": "wide"
