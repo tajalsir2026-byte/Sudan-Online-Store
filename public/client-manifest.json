@@ -2,7 +2,7 @@
   "name": "السند",
   "short_name": "السند",
   "description": "تطبيق الجمهور للتسوق والطلبات ونقاط الولاء",
-  "start_url": "/#/client",
+  "start_url": "/client.html",
   "scope": "/",
   "display": "standalone",
   "orientation": "portrait",

@@ -2,7 +2,7 @@
   "name": "إدارة السند",
   "short_name": "إدارة السند",
   "description": "لوحة إدارة المنصة المركزية لمنصة سند - متابعة التجار والاشتراكات والمدفوعات",
-  "start_url": "/#/admin",
+  "start_url": "/admin.html",
   "scope": "/",
   "display": "standalone",
   "orientation": "portrait",

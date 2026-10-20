@@ -2,7 +2,7 @@
   "name": "تاجر السند",
   "short_name": "تاجر السند",
   "description": "تطبيق التاجر لنقاط البيع وإدارة المخزون والورديات",
-  "start_url": "/#/merchant",
+  "start_url": "/merchant.html",
   "scope": "/",
   "display": "standalone",
   "orientation": "portrait",
